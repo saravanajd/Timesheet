@@ -2,9 +2,11 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 import { VitePWA } from 'vite-plugin-pwa'
 
+const base = '/Timesheet/'
+
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/timesheet/',
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -12,8 +14,8 @@ export default defineConfig({
       manifest: {
         name: 'Timesheet',
         short_name: 'Timesheet',
-        start_url: '/timesheet/',
-        scope: '/timesheet/',
+        start_url: base,
+        scope: base,
         display: 'standalone',
         theme_color: '#f6f7f9',
         background_color: '#f6f7f9',
