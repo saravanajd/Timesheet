@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   allowedWindow,
+  addDaysToKey,
+  addMonthsToKey,
   clampRange,
   formatDayLabel,
   formatMonthLabel,
@@ -63,6 +65,13 @@ describe('date ranges and labels', () => {
     expect(
       listRangeKeys({ startKey: '2026-11-08', endKey: '2026-11-06' }),
     ).toEqual([])
+  })
+
+  it('steps across day and month boundaries', () => {
+    expect(addDaysToKey('2026-11-01', -1)).toBe('2026-10-31')
+    expect(addDaysToKey('2026-11-30', 1)).toBe('2026-12-01')
+    expect(addMonthsToKey('2027-01-15', -1)).toBe('2026-12-01')
+    expect(addMonthsToKey('2026-12-31', 1)).toBe('2027-01-01')
   })
 
   it('formats day, week, and month header labels', () => {

@@ -1,5 +1,6 @@
 import {
   addDays,
+  addMonths,
   endOfMonth,
   endOfWeek,
   format,
@@ -99,6 +100,14 @@ export function listRangeKeys(range: DateRange): string[] {
     keys.push(toDateKey(date))
   }
   return keys
+}
+
+export function addDaysToKey(key: string, amount: number): string {
+  return toDateKey(addDays(parseDateKey(key), amount))
+}
+
+export function addMonthsToKey(key: string, amount: number): string {
+  return toDateKey(startOfMonth(addMonths(parseDateKey(key), amount)))
 }
 
 export function formatDayLabel(key: string): string {

@@ -87,6 +87,24 @@ body {
   font-weight: 600;
 }
 
+.timesheet-view-switcher {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--line-color);
+  border-radius: 9px;
+}
+
+.timesheet-app .timesheet-view-switcher button {
+  border: 0;
+  border-radius: 0;
+  background: var(--card-bg);
+}
+
+.timesheet-app .timesheet-view-switcher button.is-selected {
+  color: #fff;
+  background: var(--accent-color);
+}
+
 .timesheet-app button {
   border: 1px solid var(--line-color);
   border-radius: 8px;
@@ -183,6 +201,66 @@ body {
   grid-template-columns: 70px minmax(0, 1fr) 84px;
   border-left: 3px solid var(--accent-color);
   background: color-mix(in srgb, var(--accent-bg) 35%, transparent);
+}
+
+.timesheet-range-card .timesheet-day {
+  min-height: 0;
+  grid-template-columns: 62px minmax(0, 1fr) 74px;
+  border-bottom: 1px solid var(--line-color);
+  border-left-color: transparent;
+  background: transparent;
+}
+
+.timesheet-range-card .timesheet-day:last-child {
+  border-bottom: 0;
+}
+
+.timesheet-range-card .timesheet-day.is-today {
+  border-left-color: var(--accent-color);
+  background: color-mix(in srgb, var(--accent-bg) 35%, transparent);
+}
+
+.timesheet-range-card .timesheet-day.is-weekend {
+  background: var(--weekend-bg, rgba(245, 158, 11, 0.13));
+}
+
+.timesheet-range-card .timesheet-day.is-weekend .timesheet-day-date,
+.timesheet-range-card .timesheet-day.is-weekend .timesheet-day-date small {
+  color: var(--weekend-color, #d97706);
+}
+
+.timesheet-range-card .timesheet-day-date {
+  padding: 11px 0 0 12px;
+  font-size: 17px;
+}
+
+.timesheet-range-card .timesheet-day-date small {
+  margin-top: 2px;
+}
+
+.timesheet-range-card .timesheet-tasks {
+  padding: 4px 0;
+}
+
+.timesheet-range-card .timesheet-task textarea {
+  min-height: 34px;
+  padding: 7px 36px 7px 10px;
+  font-size: 15px;
+}
+
+.timesheet-range-card .timesheet-day.is-weekend .timesheet-task textarea::placeholder {
+  color: var(--weekend-color, #d97706);
+  opacity: 0.75;
+}
+
+.timesheet-range-card .timesheet-hours {
+  padding-top: 8px;
+  font-size: 13px;
+}
+
+.timesheet-range-card .timesheet-hours input {
+  width: 42px;
+  font-size: 15px;
 }
 
 .timesheet-day-date {
@@ -332,6 +410,10 @@ body {
 @media (max-width: 480px) {
   .timesheet-day {
     grid-template-columns: 58px minmax(0, 1fr) 66px;
+  }
+
+  .timesheet-range-card .timesheet-day {
+    grid-template-columns: 52px minmax(0, 1fr) 62px;
   }
 
   .timesheet-day-date {

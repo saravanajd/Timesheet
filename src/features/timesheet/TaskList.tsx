@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import type { KeyboardEvent } from 'react'
+import type { KeyboardEvent, MutableRefObject } from 'react'
 import { ensureTrailingEmptyTask } from '../../lib/dayData'
 
 interface TaskListProps {
@@ -7,6 +7,10 @@ interface TaskListProps {
   onTasksChange: (tasks: string[]) => void
   onBlur: () => void
   autoFocusLastLine: boolean
+  keepTrailingEmpty?: boolean
+  placeholder?: string
+  navigationRefs?: MutableRefObject<Array<HTMLTextAreaElement | null>>
+  navigationOffset?: number
 }
 
 function TaskList({
@@ -14,6 +18,10 @@ function TaskList({
   onTasksChange,
   onBlur,
   autoFocusLastLine,
+  keepTrailingEmpty = true,
+  placeholder = 'Add task…',
+  navigationRefs,
+  navigationOffset = 0,
 }: TaskListProps) {
   const textareaRefs = useRef<Array<HTMLTextAreaElement | null>>([])
   const pendingFocusRef = useRef<{ index: number; atEnd: boolean } | null>(null)
@@ -54,7 +62,9 @@ function TaskList({
     if (focusIndex !== undefined) {
       pendingFocusRef.current = { index: focusIndex, atEnd }
     }
-    onTasksChange(ensureTrailingEmptyTask(nextTasks))
+    onTasksChange(
+      keepTrailingEmpty ? ensureTrailingEmptyTask(nextTasks) : nextTasks,
+    )
   }
 
   function deleteTask(index: number) {
@@ -113,9 +123,12 @@ function TaskList({
         : event.currentTarget.selectionEnd === currentTask.length
       const nextIndex = index + (movingUp ? -1 : 1)
 
-      if (atEdge && textareaRefs.current[nextIndex]) {
+      const target = navigationRefs
+        ? navigationRefs.current[navigationOffset + nextIndex]
+        : textareaRefs.current[nextIndex]
+      if (atEdge && target) {
         event.preventDefault()
-        textareaRefs.current[nextIndex]?.focus()
+        target.focus()
       }
     }
   }
@@ -133,9 +146,12 @@ function TaskList({
               updateTasks(nextTasks)
             }}
             onKeyDown={(event) => handleKeyDown(event, index)}
-            placeholder={index === 0 ? 'Add task…' : undefined}
+            placeholder={index === 0 ? placeholder : undefined}
             ref={(textarea) => {
               textareaRefs.current[index] = textarea
+              if (navigationRefs) {
+                navigationRefs.current[navigationOffset + index] = textarea
+              }
             }}
             rows={1}
             value={task}

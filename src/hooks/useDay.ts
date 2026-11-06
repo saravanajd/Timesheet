@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  deleteDoc,
-  doc,
-  onSnapshot,
-  serverTimestamp,
-  setDoc,
-} from 'firebase/firestore'
+import { doc, onSnapshot } from 'firebase/firestore'
 import { db, firebaseConfigError } from '../lib/firebase'
 import { normalizeTasks } from '../lib/dayData'
+import { useDebouncedSave } from './useDebouncedSave'
 
 export type DaySaveStatus = 'loading' | 'saving' | 'saved' | 'error'
 
@@ -29,71 +24,38 @@ export function useDay(uid: string, key: string) {
   const tasksRef = useRef(tasks)
   const hoursOverrideRef = useRef(hoursOverride)
   const dirtyRef = useRef(false)
-  const flushRef = useRef<() => Promise<void>>(async () => {})
-  const scheduleRef = useRef<() => void>(() => {})
+  const latestPayloadRef = useRef<{
+    tasks: string[]
+    hoursOverride: number | null
+  } | null>(null)
+  const { saveDayDebounced, flushDay } = useDebouncedSave(uid, {
+    onSaved: (savedKey, data) => {
+      if (
+        savedKey === key &&
+        latestPayloadRef.current?.tasks === data.tasks &&
+        latestPayloadRef.current.hoursOverride === data.hoursOverride
+      ) {
+        dirtyRef.current = false
+        setError(null)
+        setStatus('saved')
+      }
+    },
+    onError: (failedKey, saveError) => {
+      if (failedKey !== key) return
+      setError(getErrorMessage(saveError))
+      setStatus('error')
+    },
+  })
 
   useEffect(() => {
     if (!db) return
 
     let active = true
-    let timer: ReturnType<typeof setTimeout> | null = null
-    let writing = false
     const dayRef = doc(db, 'users', uid, 'days', key)
-
-    const flush = async () => {
-      if (!dirtyRef.current || writing) return
-      if (timer) clearTimeout(timer)
-      timer = null
-
-      const savedTasks = normalizeTasks(tasksRef.current)
-      const savedHoursOverride = hoursOverrideRef.current
-      dirtyRef.current = false
-      writing = true
-      if (active) setStatus('saving')
-
-      try {
-        if (savedTasks.length === 0 && savedHoursOverride === null) {
-          await deleteDoc(dayRef)
-        } else {
-          await setDoc(dayRef, {
-            tasks: savedTasks,
-            hoursOverride: savedHoursOverride,
-            updatedAt: serverTimestamp(),
-          })
-        }
-
-        if (active) {
-          setError(null)
-          setStatus(dirtyRef.current ? 'saving' : 'saved')
-        }
-        writing = false
-        if (dirtyRef.current) schedule()
-      } catch (saveError: unknown) {
-        const hasNewerChanges = dirtyRef.current
-        dirtyRef.current = true
-        if (active) {
-          setError(getErrorMessage(saveError))
-          setStatus('error')
-        }
-        writing = false
-        if (hasNewerChanges) schedule()
-      }
-    }
-
-    const schedule = () => {
-      if (timer) clearTimeout(timer)
-      timer = setTimeout(() => {
-        void flush()
-      }, 600)
-    }
-
-    flushRef.current = flush
-    scheduleRef.current = schedule
-
     const unsubscribe = onSnapshot(
       dayRef,
       (snapshot) => {
-        if (!active || dirtyRef.current || writing) return
+        if (!active || dirtyRef.current) return
 
         if (snapshot.exists()) {
           const data = snapshot.data()
@@ -135,33 +97,48 @@ export function useDay(uid: string, key: string) {
     return () => {
       active = false
       unsubscribe()
-      if (timer) clearTimeout(timer)
-      timer = null
-      scheduleRef.current = () => {}
-      flushRef.current = async () => {}
-      if (dirtyRef.current) void flush()
+      if (dirtyRef.current) {
+        void flushDay(key).catch((saveError: unknown) => {
+          console.error(`Failed to flush timesheet day ${key}.`, saveError)
+        })
+      }
     }
-  }, [uid, key])
+  }, [flushDay, key, uid])
 
-  const updateTasks = useCallback((nextTasks: string[]) => {
-    tasksRef.current = nextTasks
-    setTasks(nextTasks)
-    dirtyRef.current = true
-    setError(null)
-    setStatus('saving')
-    scheduleRef.current()
-  }, [])
+  const queueSave = useCallback(
+    (nextTasks: string[], nextHoursOverride: number | null) => {
+      const payload = {
+        tasks: nextTasks,
+        hoursOverride: nextHoursOverride,
+      }
+      latestPayloadRef.current = payload
+      dirtyRef.current = true
+      setError(null)
+      setStatus('saving')
+      saveDayDebounced(key, payload)
+    },
+    [key, saveDayDebounced],
+  )
 
-  const updateHoursOverride = useCallback((nextOverride: number | null) => {
-    hoursOverrideRef.current = nextOverride
-    setHoursOverride(nextOverride)
-    dirtyRef.current = true
-    setError(null)
-    setStatus('saving')
-    scheduleRef.current()
-  }, [])
+  const updateTasks = useCallback(
+    (nextTasks: string[]) => {
+      tasksRef.current = nextTasks
+      setTasks(nextTasks)
+      queueSave(nextTasks, hoursOverrideRef.current)
+    },
+    [queueSave],
+  )
 
-  const saveNow = useCallback(() => flushRef.current(), [])
+  const updateHoursOverride = useCallback(
+    (nextOverride: number | null) => {
+      hoursOverrideRef.current = nextOverride
+      setHoursOverride(nextOverride)
+      queueSave(tasksRef.current, nextOverride)
+    },
+    [queueSave],
+  )
+
+  const saveNow = useCallback(() => flushDay(key), [flushDay, key])
 
   return {
     tasks,
