@@ -27,7 +27,7 @@ Firebase web configuration values are included in the client bundle and are not 
 
 ## GitHub Pages deployment
 
-1. In the GitHub repository, open **Settings → Secrets and variables → Actions → New repository secret**. Add the six secrets below, using the corresponding values from **Firebase Project settings → General → Your apps → SDK setup and configuration**:
+1. In the GitHub repository, open **Settings → Secrets and variables → Actions**. Add the six names below as **Repository secrets** or under the **Variables** tab as **Repository variables**, using the corresponding values from **Firebase Project settings → General → Your apps → SDK setup and configuration**. Secrets take precedence when both exist:
    - `VITE_FIREBASE_API_KEY`
    - `VITE_FIREBASE_AUTH_DOMAIN`
    - `VITE_FIREBASE_PROJECT_ID`
@@ -38,7 +38,7 @@ Firebase web configuration values are included in the client bundle and are not 
 3. Push to the `master` branch to run the deployment workflow, or start **Deploy to GitHub Pages** manually from the repository’s **Actions** tab.
 4. The site is published at `https://saravanajd.github.io/Timesheet/`. The `/Timesheet/` path is case-sensitive and must match the Vite base and PWA scope. Confirm that `saravanajd.github.io` is listed under Firebase **Authorized domains**.
 
-The workflow installs with `npm ci`, runs `npm test`, builds with the repository secrets, and deploys the `dist` artifact. It uses GitHub Pages only; Firebase Hosting is not used.
+The workflow installs with `npm ci`, runs `npm test`, builds with the repository secrets or variables, and deploys the `dist` artifact. The build stops and lists missing Firebase variable names (never their values) if configuration is incomplete. Local `.env.local` values are not available to GitHub Actions. After changing repository configuration, run a new deployment; it cannot change an already-built site. It uses GitHub Pages only; Firebase Hosting is not used.
 
 ## Install and offline use
 
