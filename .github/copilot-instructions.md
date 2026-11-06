@@ -1,6 +1,7 @@
 # Project: Timesheet
 Personal timesheet app. React + TypeScript + Vite, Bootstrap 5, Firebase Auth + Firestore, GitHub Pages.
-The approved UI and behaviour are in docs/prototype.html. Match it; do not redesign.
+Follow docs/Timesheet-development-plan.md for the development plan. The approved UI and behaviour are in
+docs/timesheet-entry.html. Match it; do not redesign.
 
 ## Rules
 - Work one phase at a time. Do not start the next phase. Stop and summarise when a phase is done.
