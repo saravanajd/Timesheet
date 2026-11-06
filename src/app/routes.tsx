@@ -12,6 +12,8 @@ function AppRoutes() {
     error,
     configured,
     signInWithGoogle,
+    signInWithEmail,
+    createAccount,
     signOut,
   } = useAuth()
 
@@ -29,7 +31,9 @@ function AppRoutes() {
         <LoginPage
           configured={configured}
           error={error}
-          onSignIn={signInWithGoogle}
+          onSignInWithGoogle={signInWithGoogle}
+          onSignInWithEmail={signInWithEmail}
+          onCreateAccount={createAccount}
         />
       </ErrorBoundary>
     )

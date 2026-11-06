@@ -6,7 +6,7 @@ Personal timesheet app built with React, TypeScript, Vite, Bootstrap, and Fireba
 
 1. Create a Firebase project on the free Spark plan at [Firebase Console](https://console.firebase.google.com/).
 2. In **Project settings → General**, register a Web app and note its six configuration values.
-3. In **Authentication → Sign-in method**, enable **Google**.
+3. In **Authentication → Sign-in method**, enable both **Email/Password** and **Google**.
 4. In **Authentication → Settings → Authorized domains**, add `saravanajd.github.io` (the hostname only) so Google sign-in works on `https://saravanajd.github.io/timesheet/`.
 5. Create a Cloud Firestore database. Open **Firestore Database → Rules**, replace the contents with [`firestore.rules`](./firestore.rules), and publish. These rules restrict each signed-in user to their own documents.
 
@@ -35,7 +35,7 @@ Firebase web configuration values are included in the client bundle and are not 
    - `VITE_FIREBASE_MESSAGING_SENDER_ID`
    - `VITE_FIREBASE_APP_ID`
 2. Open **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**.
-3. Push to the `main` branch to run the deployment workflow, or start **Deploy to GitHub Pages** manually from the repository’s **Actions** tab.
+3. Push to the `master` branch to run the deployment workflow, or start **Deploy to GitHub Pages** manually from the repository’s **Actions** tab.
 4. The site is published at `https://saravanajd.github.io/timesheet/`. Confirm that `saravanajd.github.io` is listed under Firebase **Authorized domains**.
 
 The workflow installs with `npm ci`, runs `npm test`, builds with the repository secrets, and deploys the `dist` artifact. It uses GitHub Pages only; Firebase Hosting is not used.

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
   type User,
@@ -52,6 +54,32 @@ export function useAuth() {
     }
   }
 
+  async function signInWithEmail(email: string, password: string) {
+    if (!auth) {
+      showError(firebaseConfigError ?? 'Firebase Authentication is unavailable.')
+      return
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+    } catch (signInError: unknown) {
+      showError(getErrorMessage(signInError))
+    }
+  }
+
+  async function createAccount(email: string, password: string) {
+    if (!auth) {
+      showError(firebaseConfigError ?? 'Firebase Authentication is unavailable.')
+      return
+    }
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password)
+    } catch (createError: unknown) {
+      showError(getErrorMessage(createError))
+    }
+  }
+
   async function signOut() {
     if (!auth) {
       setError(firebaseConfigError)
@@ -72,6 +100,8 @@ export function useAuth() {
     error,
     configured: auth !== null,
     signInWithGoogle,
+    signInWithEmail,
+    createAccount,
     signOut,
   }
 }

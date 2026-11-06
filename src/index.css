@@ -479,6 +479,115 @@ body {
   color: var(--text-color);
 }
 
+.login-card {
+  max-width: 24rem;
+  border: 1px solid var(--line-color);
+  border-radius: 12px;
+  padding: 24px;
+  color: var(--text-color);
+  background: var(--card-bg);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 6%);
+}
+
+.login-card h1 {
+  color: var(--text-color);
+}
+
+.login-description,
+.login-toggle {
+  color: var(--muted-color);
+}
+
+.login-form {
+  display: grid;
+  gap: 8px;
+}
+
+.login-form label {
+  margin-top: 6px;
+  color: var(--text-color);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.login-form input {
+  min-height: 42px;
+  border: 1px solid var(--line-color);
+  border-radius: 7px;
+  padding: 8px 10px;
+  color: var(--text-color);
+  background: var(--page-bg);
+  font: inherit;
+}
+
+.login-form input:focus {
+  border-color: var(--accent-color);
+  outline: 2px solid color-mix(in srgb, var(--accent-color) 25%, transparent);
+}
+
+.login-form input:disabled {
+  opacity: 0.6;
+}
+
+.login-card button {
+  min-height: 42px;
+  border: 1px solid var(--line-color);
+  border-radius: 7px;
+  padding: 8px 12px;
+  color: var(--text-color);
+  background: var(--chip-bg);
+  font: inherit;
+  cursor: pointer;
+}
+
+.login-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.login-card .login-primary {
+  margin-top: 8px;
+  border-color: var(--accent-color);
+  color: var(--accent-contrast);
+  background: var(--accent-color);
+}
+
+.login-toggle {
+  margin: 14px 0 0;
+  text-align: center;
+  font-size: 13px;
+}
+
+.login-card .login-toggle button {
+  min-height: 0;
+  border: 0;
+  padding: 0;
+  color: var(--accent-color);
+  background: transparent;
+  font-weight: 600;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--muted-color);
+  font-size: 12px;
+}
+
+.login-divider::before,
+.login-divider::after {
+  height: 1px;
+  flex: 1;
+  background: var(--line-color);
+  content: '';
+}
+
+.login-card .login-google {
+  width: 100%;
+}
+
 .timesheet-tip {
   margin-top: 10px;
   color: var(--muted-color);
