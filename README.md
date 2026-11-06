@@ -23,3 +23,7 @@ Personal timesheet app built with React, TypeScript, Vite, Bootstrap, and Fireba
 7. Install dependencies and start the app with `npm install` and `npm run dev`.
 
 Firebase web configuration values are included in the client bundle and are not secrets. Never put private credentials in these variables; Firestore security rules protect users' data.
+
+## Install and offline use
+
+The production site can be installed as a PWA from a supported browser. Firestore keeps previously loaded timesheet data in its persistent local cache; edits made offline are queued and sync when the connection returns. The service worker precaches only the app shell and static assets and is disabled during `npm run dev`.

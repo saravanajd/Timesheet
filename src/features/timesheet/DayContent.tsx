@@ -62,6 +62,7 @@ function DayContent({
       <div className="timesheet-save-status" aria-live="polite">
         {status === 'loading' ? 'Loading…' : status === 'saving' ? 'Saving…' : ''}
         {status === 'saved' ? 'Saved' : ''}
+        {status === 'offline' ? 'Saved offline · will sync' : ''}
         {status === 'error' ? 'Save failed' : ''}
       </div>
     </>

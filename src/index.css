@@ -9,7 +9,9 @@
   --chip-bg: #f1f3f5;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
   color-scheme: light;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-color);
@@ -78,6 +80,16 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.timesheet-offline-badge {
+  border: 1px solid color-mix(in srgb, #d97706 40%, var(--line-color));
+  border-radius: 999px;
+  padding: 4px 9px;
+  color: #b45309;
+  background: color-mix(in srgb, #f59e0b 12%, var(--card-bg));
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .timesheet-top h1 {
@@ -420,6 +432,49 @@ body {
 }
 
 @media (max-width: 480px) {
+  .app-header {
+    flex-wrap: wrap;
+  }
+
+  .app-header > .text-secondary {
+    flex: 1 0 100%;
+  }
+
+  .app-header button {
+    min-height: 40px;
+  }
+
+  .timesheet-top {
+    flex-wrap: wrap;
+  }
+
+  .timesheet-top h1 {
+    flex: 1 1 auto;
+  }
+
+  .timesheet-actions {
+    flex: 1 0 100%;
+    justify-content: flex-end;
+  }
+
+  .timesheet-app button {
+    min-height: 40px;
+  }
+
+  .timesheet-delete-task {
+    width: 40px;
+    height: 40px;
+    padding: 0 !important;
+  }
+
+  .timesheet-range-card .timesheet-task textarea {
+    font-size: 16px;
+  }
+
+  .timesheet-hours input {
+    min-height: 40px;
+  }
+
   .timesheet-day {
     grid-template-columns: 58px minmax(0, 1fr) 66px;
   }

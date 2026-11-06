@@ -8,10 +8,16 @@ import {
 } from 'firebase/firestore'
 import { db, firebaseConfigError } from '../lib/firebase'
 import { clampRange, allowedWindow } from '../lib/workday'
+import { getSnapshotSaveStatus } from '../lib/saveStatus'
 import { useDebouncedSave } from './useDebouncedSave'
 import type { DayEntry, DaysByKey } from '../types'
 
-export type DaysRangeStatus = 'loading' | 'saving' | 'saved' | 'error'
+export type DaysRangeStatus =
+  | 'loading'
+  | 'saving'
+  | 'saved'
+  | 'offline'
+  | 'error'
 
 interface RangeState {
   rangeId: string
@@ -38,6 +44,7 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
   const [rangeState, setRangeState] = useState<RangeState | null>(null)
   const dirtyKeysRef = useRef(new Set<string>())
   const latestPayloadRef = useRef(new Map<string, DayEntry>())
+  const snapshotStatusRef = useRef<DaysRangeStatus>('loading')
 
   const { saveDayDebounced, flushDay } = useDebouncedSave(uid, {
     onSaved: (key, payload) => {
@@ -48,7 +55,13 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
         current?.rangeId === rangeId
           ? {
               ...current,
-              status: dirtyKeysRef.current.size > 0 ? 'saving' : 'saved',
+              status:
+                dirtyKeysRef.current.size > 0
+                  ? snapshotStatusRef.current === 'offline' ||
+                    !navigator.onLine
+                    ? 'offline'
+                    : 'saving'
+                  : snapshotStatusRef.current,
               error: null,
             }
           : current,
@@ -80,8 +93,13 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
 
     const unsubscribe = onSnapshot(
       daysQuery,
+      { includeMetadataChanges: true },
       (snapshot) => {
         if (!active) return
+        snapshotStatusRef.current = getSnapshotSaveStatus(
+          snapshot.metadata,
+          navigator.onLine,
+        )
         setRangeState((current) => {
           const nextDays: Record<string, DayEntry> = {}
           for (const dayDocument of snapshot.docs) {
@@ -111,7 +129,12 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
           return {
             rangeId,
             days: nextDays,
-            status: dirtyKeysRef.current.size > 0 ? 'saving' : 'saved',
+            status:
+              dirtyKeysRef.current.size > 0
+                ? snapshotStatusRef.current === 'offline' || !navigator.onLine
+                  ? 'offline'
+                  : 'saving'
+                : snapshotStatusRef.current,
             error: null,
           }
         })
@@ -144,7 +167,7 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
           ...(current?.rangeId === rangeId ? current.days : {}),
           [key]: day,
         },
-        status: 'saving',
+        status: navigator.onLine ? 'saving' : 'offline',
         error: null,
       }))
       saveDayDebounced(key, day)

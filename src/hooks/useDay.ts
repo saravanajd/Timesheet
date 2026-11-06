@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db, firebaseConfigError } from '../lib/firebase'
 import { normalizeTasks } from '../lib/dayData'
+import { getSnapshotSaveStatus } from '../lib/saveStatus'
 import { useDebouncedSave } from './useDebouncedSave'
 
-export type DaySaveStatus = 'loading' | 'saving' | 'saved' | 'error'
+export type DaySaveStatus = 'loading' | 'saving' | 'saved' | 'offline' | 'error'
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error
@@ -37,7 +38,6 @@ export function useDay(uid: string, key: string) {
       ) {
         dirtyRef.current = false
         setError(null)
-        setStatus('saved')
       }
     },
     onError: (failedKey, saveError) => {
@@ -54,8 +54,12 @@ export function useDay(uid: string, key: string) {
     const dayRef = doc(db, 'users', uid, 'days', key)
     const unsubscribe = onSnapshot(
       dayRef,
+      { includeMetadataChanges: true },
       (snapshot) => {
-        if (!active || dirtyRef.current) return
+        if (!active) return
+
+        setStatus(getSnapshotSaveStatus(snapshot.metadata, navigator.onLine))
+        if (dirtyRef.current) return
 
         if (snapshot.exists()) {
           const data = snapshot.data()
@@ -85,7 +89,6 @@ export function useDay(uid: string, key: string) {
         }
 
         setError(null)
-        setStatus('saved')
       },
       (listenerError) => {
         if (!active) return
@@ -114,7 +117,7 @@ export function useDay(uid: string, key: string) {
       latestPayloadRef.current = payload
       dirtyRef.current = true
       setError(null)
-      setStatus('saving')
+      setStatus(navigator.onLine ? 'saving' : 'offline')
       saveDayDebounced(key, payload)
     },
     [key, saveDayDebounced],
