@@ -131,6 +131,18 @@ body {
   opacity: 0.45;
 }
 
+.timesheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.timesheet-app .timesheet-actions button.is-primary {
+  border-color: var(--accent-color);
+  color: #fff;
+  background: var(--accent-color);
+}
+
 .timesheet-nav {
   display: flex;
   align-items: center;

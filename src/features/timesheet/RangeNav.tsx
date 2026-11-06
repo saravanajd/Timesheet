@@ -9,8 +9,9 @@ import {
   weekRange,
   type AllowedWindow,
 } from '../../lib/workday'
+import type { TimesheetViewType } from '../../types'
 
-export type TimesheetViewType = 'day' | 'week' | 'month'
+export type { TimesheetViewType } from '../../types'
 
 interface RangeNavProps {
   view: TimesheetViewType

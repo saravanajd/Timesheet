@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildCopyText } from './copyText'
+import { buildCopyText, copyTitleForView } from './copyText'
 
 describe('buildCopyText', () => {
   it('formats task days, skips empty days, and totals the displayed hours', () => {
@@ -33,6 +33,14 @@ describe('buildCopyText', () => {
         'Total: 16.5 h',
       ].join('\n'),
     )
+  })
+
+  describe('copyTitleForView', () => {
+    it('formats titles for day, week, and month copy actions', () => {
+      expect(copyTitleForView('day', '2026-11-06')).toBe('Fri, Nov 6')
+      expect(copyTitleForView('week', '2026-11-06')).toBe('Nov 2 – Nov 8')
+      expect(copyTitleForView('month', '2026-11-06')).toBe('November 2026')
+    })
   })
 
   it('shows a zero total when there are no task days', () => {

@@ -4,6 +4,7 @@ export interface DayEntry {
 }
 
 export type DaysByKey = Readonly<Record<string, DayEntry>>
+export type TimesheetViewType = 'day' | 'week' | 'month'
 
 export interface UserSettings {
   autoHours: number

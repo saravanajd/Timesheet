@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react'
-import type { DaysByKey } from '../../types'
+import type { DaysByKey, TimesheetViewType } from '../../types'
 import { allowedWindow, getWorkdayKey, weekRange } from '../../lib/workday'
 import { useSettings } from '../../hooks/useSettings'
 import DayView from './DayView'
+import CopyExportActions from './CopyExportActions'
 import MonthView from './MonthView'
-import RangeNav, { type TimesheetViewType } from './RangeNav'
+import RangeNav from './RangeNav'
 import SummaryBar from './SummaryBar'
 import WeekView from './WeekView'
 
@@ -53,6 +54,14 @@ function TimesheetPage({ uid }: TimesheetPageProps) {
             </button>
           ))}
         </div>
+        <CopyExportActions
+          autoHours={settings.autoHours}
+          dayKey={dayKey}
+          days={days}
+          uid={uid}
+          view={view}
+          window={dateContext.window}
+        />
       </header>
 
       <RangeNav

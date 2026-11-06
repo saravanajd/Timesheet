@@ -1,6 +1,13 @@
 import { format, parseISO } from 'date-fns'
 import type { DaysByKey } from '../types'
 import { displayHours } from './hours'
+import {
+  formatDayLabel,
+  formatMonthLabel,
+  formatWeekLabel,
+  weekRange,
+} from './workday'
+import type { TimesheetViewType } from '../types'
 
 function formatHours(hours: number): string {
   return Number(hours.toFixed(2)).toString()
@@ -30,4 +37,13 @@ export function buildCopyText(
   })
 
   return `${title}\n\n${sections.join('\n\n')}${sections.length > 0 ? '\n\n' : ''}Total: ${formatHours(totalHours)} h`
+}
+
+export function copyTitleForView(
+  view: TimesheetViewType,
+  dayKey: string,
+): string {
+  if (view === 'day') return formatDayLabel(dayKey)
+  if (view === 'week') return formatWeekLabel(weekRange(dayKey))
+  return formatMonthLabel(dayKey)
 }
