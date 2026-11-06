@@ -10,6 +10,8 @@ import { db, firebaseConfigError } from '../lib/firebase'
 import { clampRange, allowedWindow } from '../lib/workday'
 import { getSnapshotSaveStatus } from '../lib/saveStatus'
 import { useDebouncedSave } from './useDebouncedSave'
+import { useOnlineStatus } from './useOnlineStatus'
+import { useToast } from './useToast'
 import type { DayEntry, DaysByKey } from '../types'
 
 export type DaysRangeStatus =
@@ -35,6 +37,8 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function useDaysRange(uid: string, startKey: string, endKey: string) {
+  const isOnline = useOnlineStatus()
+  const { showError } = useToast()
   const window = useMemo(() => allowedWindow(new Date()), [])
   const range = useMemo(
     () => clampRange({ startKey, endKey }, window),
@@ -58,7 +62,7 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
               status:
                 dirtyKeysRef.current.size > 0
                   ? snapshotStatusRef.current === 'offline' ||
-                    !navigator.onLine
+                    !isOnline
                     ? 'offline'
                     : 'saving'
                   : snapshotStatusRef.current,
@@ -68,15 +72,17 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
       )
     },
     onError: (key, saveError) => {
+      const message = getErrorMessage(saveError)
       setRangeState((current) =>
         current?.rangeId === rangeId
           ? {
               ...current,
               status: 'error',
-              error: `Could not save ${key}: ${getErrorMessage(saveError)}`,
+              error: `Could not save ${key}: ${message}`,
             }
           : current,
       )
+      showError(`Could not save ${key}: ${message}`)
     },
   })
 
@@ -98,7 +104,7 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
         if (!active) return
         snapshotStatusRef.current = getSnapshotSaveStatus(
           snapshot.metadata,
-          navigator.onLine,
+          isOnline,
         )
         setRangeState((current) => {
           const nextDays: Record<string, DayEntry> = {}
@@ -131,7 +137,7 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
             days: nextDays,
             status:
               dirtyKeysRef.current.size > 0
-                ? snapshotStatusRef.current === 'offline' || !navigator.onLine
+                ? snapshotStatusRef.current === 'offline' || !isOnline
                   ? 'offline'
                   : 'saving'
                 : snapshotStatusRef.current,
@@ -141,13 +147,15 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
       },
       (listenerError) => {
         if (!active) return
+        const message = getErrorMessage(listenerError)
         setRangeState((current) => ({
           rangeId,
           days:
             current?.rangeId === rangeId ? current.days : EMPTY_DAYS,
           status: 'error',
-          error: getErrorMessage(listenerError),
+          error: message,
         }))
+        showError(`Could not load timesheet days: ${message}`)
       },
     )
 
@@ -155,7 +163,7 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
       active = false
       unsubscribe()
     }
-  }, [range, rangeId, uid])
+  }, [isOnline, range, rangeId, showError, uid])
 
   const updateDay = useCallback(
     (key: string, day: DayEntry) => {
@@ -167,15 +175,20 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
           ...(current?.rangeId === rangeId ? current.days : {}),
           [key]: day,
         },
-        status: navigator.onLine ? 'saving' : 'offline',
+        status: isOnline ? 'saving' : 'offline',
         error: null,
       }))
       saveDayDebounced(key, day)
     },
-    [rangeId, saveDayDebounced],
+    [isOnline, rangeId, saveDayDebounced],
   )
 
   const saveNow = useCallback((key: string) => flushDay(key), [flushDay])
+
+  useEffect(() => {
+    if (!isOnline) return
+    for (const key of dirtyKeysRef.current) void flushDay(key)
+  }, [flushDay, isOnline])
 
   const currentState =
     rangeState?.rangeId === rangeId

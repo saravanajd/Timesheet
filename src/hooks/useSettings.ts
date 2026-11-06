@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { doc, onSnapshot, setDoc } from 'firebase/firestore'
 import { db, firebaseConfigError } from '../lib/firebase'
+import { useToast } from './useToast'
 import type { UserSettings } from '../types'
 
 export type SettingsStatus = 'loading' | 'saving' | 'saved' | 'error'
@@ -17,6 +18,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function useSettings(uid: string) {
+  const { showError } = useToast()
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS)
   const [status, setStatus] = useState<SettingsStatus>(
     db ? 'loading' : 'error',
@@ -67,8 +69,10 @@ export function useSettings(uid: string) {
         }
       } catch (saveError: unknown) {
         if (active) {
-          setError(getErrorMessage(saveError))
+          const message = getErrorMessage(saveError)
+          setError(message)
           setStatus('error')
+          showError(`Could not save settings: ${message}`)
         }
         writing = false
         if (pendingAutoHoursRef.current !== null) {
@@ -113,8 +117,10 @@ export function useSettings(uid: string) {
       },
       (listenerError) => {
         if (!active) return
-        setError(getErrorMessage(listenerError))
+        const message = getErrorMessage(listenerError)
+        setError(message)
         setStatus('error')
+        showError(`Could not load settings: ${message}`)
       },
     )
 
@@ -126,7 +132,7 @@ export function useSettings(uid: string) {
       if (pendingAutoHoursRef.current !== null) void flush()
       flushRef.current = async () => {}
     }
-  }, [uid])
+  }, [showError, uid])
 
   const saveAutoHours = useCallback((autoHours: number) => {
     if (!Number.isFinite(autoHours) || autoHours <= 0) {

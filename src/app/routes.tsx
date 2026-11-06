@@ -3,6 +3,7 @@ import AppLayout from './AppLayout'
 import LoginPage from '../features/auth/LoginPage'
 import TimesheetPage from '../features/timesheet/TimesheetPage'
 import { useAuth } from '../hooks/useAuth'
+import ErrorBoundary from '../components/ErrorBoundary'
 
 function AppRoutes() {
   const {
@@ -24,11 +25,13 @@ function AppRoutes() {
 
   if (!user) {
     return (
-      <LoginPage
-        configured={configured}
-        error={error}
-        onSignIn={signInWithGoogle}
-      />
+      <ErrorBoundary>
+        <LoginPage
+          configured={configured}
+          error={error}
+          onSignIn={signInWithGoogle}
+        />
+      </ErrorBoundary>
     )
   }
 

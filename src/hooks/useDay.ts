@@ -4,6 +4,8 @@ import { db, firebaseConfigError } from '../lib/firebase'
 import { normalizeTasks } from '../lib/dayData'
 import { getSnapshotSaveStatus } from '../lib/saveStatus'
 import { useDebouncedSave } from './useDebouncedSave'
+import { useOnlineStatus } from './useOnlineStatus'
+import { useToast } from './useToast'
 
 export type DaySaveStatus = 'loading' | 'saving' | 'saved' | 'offline' | 'error'
 
@@ -14,6 +16,8 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function useDay(uid: string, key: string) {
+  const isOnline = useOnlineStatus()
+  const { showError } = useToast()
   const [tasks, setTasks] = useState<string[]>([''])
   const [hoursOverride, setHoursOverride] = useState<number | null>(null)
   const [status, setStatus] = useState<DaySaveStatus>(
@@ -42,10 +46,16 @@ export function useDay(uid: string, key: string) {
     },
     onError: (failedKey, saveError) => {
       if (failedKey !== key) return
-      setError(getErrorMessage(saveError))
+      const message = getErrorMessage(saveError)
+      setError(message)
       setStatus('error')
+      showError(`Could not save this day: ${message}`)
     },
   })
+
+  useEffect(() => {
+    if (isOnline && dirtyRef.current) void flushDay(key)
+  }, [flushDay, isOnline, key])
 
   useEffect(() => {
     if (!db) return
@@ -58,7 +68,7 @@ export function useDay(uid: string, key: string) {
       (snapshot) => {
         if (!active) return
 
-        setStatus(getSnapshotSaveStatus(snapshot.metadata, navigator.onLine))
+        setStatus(getSnapshotSaveStatus(snapshot.metadata, isOnline))
         if (dirtyRef.current) return
 
         if (snapshot.exists()) {
@@ -92,8 +102,10 @@ export function useDay(uid: string, key: string) {
       },
       (listenerError) => {
         if (!active) return
-        setError(getErrorMessage(listenerError))
+        const message = getErrorMessage(listenerError)
+        setError(message)
         setStatus('error')
+        showError(`Could not load this day: ${message}`)
       },
     )
 
@@ -106,7 +118,7 @@ export function useDay(uid: string, key: string) {
         })
       }
     }
-  }, [flushDay, key, uid])
+  }, [flushDay, isOnline, key, showError, uid])
 
   const queueSave = useCallback(
     (nextTasks: string[], nextHoursOverride: number | null) => {
@@ -117,10 +129,10 @@ export function useDay(uid: string, key: string) {
       latestPayloadRef.current = payload
       dirtyRef.current = true
       setError(null)
-      setStatus(navigator.onLine ? 'saving' : 'offline')
+      setStatus(isOnline ? 'saving' : 'offline')
       saveDayDebounced(key, payload)
     },
-    [key, saveDayDebounced],
+    [isOnline, key, saveDayDebounced],
   )
 
   const updateTasks = useCallback(

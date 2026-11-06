@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { DaysByKey } from '../../types'
 import { buildCopyText, copyTitleForView } from '../../lib/copyText'
 import { exportMonthExcel } from '../../lib/exportExcel'
+import { useToast } from '../../hooks/useToast'
 import type { AllowedWindow } from '../../lib/workday'
 import type { TimesheetViewType } from './RangeNav'
 
@@ -12,10 +13,6 @@ interface CopyExportActionsProps {
   days: DaysByKey
   autoHours: number
   window: AllowedWindow
-}
-
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'An unexpected error occurred.'
 }
 
 async function copyText(text: string): Promise<void> {
@@ -49,9 +46,9 @@ function CopyExportActions({
   autoHours,
   window,
 }: CopyExportActionsProps) {
+  const { showError } = useToast()
   const [copied, setCopied] = useState(false)
   const [exporting, setExporting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const monthKey = `${dayKey.slice(0, 7)}-01`
 
@@ -63,7 +60,6 @@ function CopyExportActions({
   )
 
   async function handleCopy() {
-    setError(null)
     const text = buildCopyText(
       copyTitleForView(view, dayKey),
       days,
@@ -75,17 +71,28 @@ function CopyExportActions({
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
       copyTimerRef.current = setTimeout(() => setCopied(false), 1500)
     } catch (copyError: unknown) {
-      setError(getErrorMessage(copyError))
+      showError(
+        `Could not copy the timesheet: ${
+          copyError instanceof Error
+            ? copyError.message
+            : 'An unexpected error occurred.'
+        }`,
+      )
     }
   }
 
   async function handleExport() {
-    setError(null)
     setExporting(true)
     try {
       await exportMonthExcel(uid, monthKey, autoHours, window)
     } catch (exportError: unknown) {
-      setError(getErrorMessage(exportError))
+      showError(
+        `Could not export the month: ${
+          exportError instanceof Error
+            ? exportError.message
+            : 'An unexpected error occurred.'
+        }`,
+      )
     } finally {
       setExporting(false)
     }
@@ -107,11 +114,6 @@ function CopyExportActions({
           </button>
         )}
       </div>
-      {error && (
-        <div className="timesheet-error" role="alert">
-          {error}
-        </div>
-      )}
     </>
   )
 }

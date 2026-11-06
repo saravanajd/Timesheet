@@ -7,6 +7,7 @@ import {
   type User,
 } from 'firebase/auth'
 import { auth, firebaseConfigError } from '../lib/firebase'
+import { useToast } from './useToast'
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error
@@ -15,6 +16,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 export function useAuth() {
+  const { showError } = useToast()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(auth !== null)
   const [error, setError] = useState<string | null>(firebaseConfigError)
@@ -46,7 +48,7 @@ export function useAuth() {
     try {
       await signInWithPopup(auth, new GoogleAuthProvider())
     } catch (signInError: unknown) {
-      setError(getErrorMessage(signInError))
+      showError(getErrorMessage(signInError))
     }
   }
 
