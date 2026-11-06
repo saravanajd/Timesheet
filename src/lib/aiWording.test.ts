@@ -59,6 +59,29 @@ describe('getAIWordingErrorMessage', () => {
     )
   })
 
+  it('explains a temporary model overload without blaming configuration', () => {
+    expect(
+      getAIWordingErrorMessage(
+        new Error(
+          'AI: Error fetching: [500] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.',
+        ),
+      ),
+    ).toBe(
+      'AI wording is temporarily busy. Your task was not changed; please try again later.',
+    )
+  })
+
+  it('handles temporary service unavailability in SDK error details', () => {
+    expect(
+      getAIWordingErrorMessage({
+        code: 'ai/fetch-error',
+        customData: { httpStatus: 503 },
+      }),
+    ).toBe(
+      'AI wording is temporarily busy. Your task was not changed; please try again later.',
+    )
+  })
+
   it('explains the local request interval', () => {
     expect(getAIWordingErrorMessage(new AIWordingRateLimitError())).toBe(
       'Please wait a moment before trying AI wording again.',

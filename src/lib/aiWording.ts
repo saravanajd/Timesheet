@@ -66,6 +66,9 @@ export function getAIWordingErrorMessage(error: unknown): string {
   if (/429|quota|resource[_ -]?exhausted|rate.?limit/.test(message)) {
     return 'AI limit reached, try again later.'
   }
+  if (/high demand|overload|503|unavailable/.test(message)) {
+    return 'AI wording is temporarily busy. Your task was not changed; please try again later.'
+  }
   if (
     error instanceof TypeError ||
     /network|fetch|offline|connection|internet|timed? ?out/.test(message)
