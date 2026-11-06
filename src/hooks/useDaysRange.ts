@@ -9,13 +9,15 @@ import {
 import { db, firebaseConfigError } from '../lib/firebase'
 import { clampRange, allowedWindow } from '../lib/workday'
 import { getSnapshotSaveStatus } from '../lib/saveStatus'
-import { useDebouncedSave } from './useDebouncedSave'
+import { reconcileTaskDraft } from '../lib/dayData'
+import { useDaySave } from './useDaySave'
 import { useOnlineStatus } from './useOnlineStatus'
 import { useToast } from './useToast'
 import type { DayEntry, DaysByKey } from '../types'
 
 export type DaysRangeStatus =
   | 'loading'
+  | 'editing'
   | 'saving'
   | 'saved'
   | 'offline'
@@ -50,7 +52,7 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
   const latestPayloadRef = useRef(new Map<string, DayEntry>())
   const snapshotStatusRef = useRef<DaysRangeStatus>('loading')
 
-  const { saveDayDebounced, flushDay } = useDebouncedSave(uid, {
+  const { stageDay, flushDay } = useDaySave(uid, {
     onSaved: (key, payload) => {
       if (latestPayloadRef.current.get(key) !== payload) return
       latestPayloadRef.current.delete(key)
@@ -60,12 +62,7 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
           ? {
               ...current,
               status:
-                dirtyKeysRef.current.size > 0
-                  ? snapshotStatusRef.current === 'offline' ||
-                    !isOnline
-                    ? 'offline'
-                    : 'saving'
-                  : snapshotStatusRef.current,
+                dirtyKeysRef.current.size > 0 ? 'editing' : 'saved',
               error: null,
             }
           : current,
@@ -126,6 +123,17 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
           }
 
           if (current?.rangeId === rangeId) {
+            for (const [key, localDay] of Object.entries(current.days)) {
+              const savedDay = nextDays[key]
+              if (savedDay) {
+                nextDays[key] = {
+                  ...savedDay,
+                  tasks: reconcileTaskDraft(savedDay.tasks, localDay.tasks),
+                }
+              } else if (localDay.tasks.every((task) => !task.trim())) {
+                nextDays[key] = { tasks: localDay.tasks, hoursOverride: null }
+              }
+            }
             for (const key of dirtyKeysRef.current) {
               const localDay = current.days[key]
               if (localDay) nextDays[key] = localDay
@@ -137,9 +145,7 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
             days: nextDays,
             status:
               dirtyKeysRef.current.size > 0
-                ? snapshotStatusRef.current === 'offline' || !isOnline
-                  ? 'offline'
-                  : 'saving'
+                ? current?.status ?? 'editing'
                 : snapshotStatusRef.current,
             error: null,
           }
@@ -175,20 +181,27 @@ export function useDaysRange(uid: string, startKey: string, endKey: string) {
           ...(current?.rangeId === rangeId ? current.days : {}),
           [key]: day,
         },
-        status: isOnline ? 'saving' : 'offline',
+        status: 'editing',
         error: null,
       }))
-      saveDayDebounced(key, day)
+      stageDay(key, day)
     },
-    [isOnline, rangeId, saveDayDebounced],
+    [rangeId, stageDay],
   )
 
-  const saveNow = useCallback((key: string) => flushDay(key), [flushDay])
-
-  useEffect(() => {
-    if (!isOnline) return
-    for (const key of dirtyKeysRef.current) void flushDay(key)
-  }, [flushDay, isOnline])
+  const saveNow = useCallback(
+    (key: string) => {
+      if (dirtyKeysRef.current.has(key)) {
+        setRangeState((current) =>
+          current?.rangeId === rangeId
+            ? { ...current, status: isOnline ? 'saving' : 'offline' }
+            : current,
+        )
+      }
+      return flushDay(key)
+    },
+    [flushDay, isOnline, rangeId],
+  )
 
   const currentState =
     rangeState?.rangeId === rangeId

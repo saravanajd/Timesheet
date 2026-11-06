@@ -1,13 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db, firebaseConfigError } from '../lib/firebase'
-import { normalizeTasks } from '../lib/dayData'
+import { normalizeTasks, reconcileTaskDraft } from '../lib/dayData'
 import { getSnapshotSaveStatus } from '../lib/saveStatus'
-import { useDebouncedSave } from './useDebouncedSave'
+import { useDaySave } from './useDaySave'
 import { useOnlineStatus } from './useOnlineStatus'
 import { useToast } from './useToast'
 
-export type DaySaveStatus = 'loading' | 'saving' | 'saved' | 'offline' | 'error'
+export type DaySaveStatus =
+  | 'loading'
+  | 'editing'
+  | 'saving'
+  | 'saved'
+  | 'offline'
+  | 'error'
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error
@@ -33,7 +39,7 @@ export function useDay(uid: string, key: string) {
     tasks: string[]
     hoursOverride: number | null
   } | null>(null)
-  const { saveDayDebounced, flushDay } = useDebouncedSave(uid, {
+  const { stageDay, flushDay } = useDaySave(uid, {
     onSaved: (savedKey, data) => {
       if (
         savedKey === key &&
@@ -42,6 +48,7 @@ export function useDay(uid: string, key: string) {
       ) {
         dirtyRef.current = false
         setError(null)
+        setStatus(isOnline ? 'saved' : 'offline')
       }
     },
     onError: (failedKey, saveError) => {
@@ -54,10 +61,6 @@ export function useDay(uid: string, key: string) {
   })
 
   useEffect(() => {
-    if (isOnline && dirtyRef.current) void flushDay(key)
-  }, [flushDay, isOnline, key])
-
-  useEffect(() => {
     if (!db) return
 
     let active = true
@@ -68,8 +71,8 @@ export function useDay(uid: string, key: string) {
       (snapshot) => {
         if (!active) return
 
-        setStatus(getSnapshotSaveStatus(snapshot.metadata, isOnline))
         if (dirtyRef.current) return
+        setStatus(getSnapshotSaveStatus(snapshot.metadata, isOnline))
 
         if (snapshot.exists()) {
           const data = snapshot.data()
@@ -85,16 +88,20 @@ export function useDay(uid: string, key: string) {
             Number.isFinite(data.hoursOverride)
               ? data.hoursOverride
               : null
-          const visibleTasks = [...savedTasks, '']
+          const visibleTasks = reconcileTaskDraft(
+            [...savedTasks, ''],
+            tasksRef.current,
+          )
 
           tasksRef.current = visibleTasks
           hoursOverrideRef.current = savedOverride
           setTasks(visibleTasks)
           setHoursOverride(savedOverride)
         } else {
-          tasksRef.current = ['']
+          const visibleTasks = reconcileTaskDraft([''], tasksRef.current)
+          tasksRef.current = visibleTasks
           hoursOverrideRef.current = null
-          setTasks([''])
+          setTasks(visibleTasks)
           setHoursOverride(null)
         }
 
@@ -112,15 +119,10 @@ export function useDay(uid: string, key: string) {
     return () => {
       active = false
       unsubscribe()
-      if (dirtyRef.current) {
-        void flushDay(key).catch((saveError: unknown) => {
-          console.error(`Failed to flush timesheet day ${key}.`, saveError)
-        })
-      }
     }
-  }, [flushDay, isOnline, key, showError, uid])
+  }, [isOnline, key, showError, uid])
 
-  const queueSave = useCallback(
+  const stageChanges = useCallback(
     (nextTasks: string[], nextHoursOverride: number | null) => {
       const payload = {
         tasks: nextTasks,
@@ -129,31 +131,34 @@ export function useDay(uid: string, key: string) {
       latestPayloadRef.current = payload
       dirtyRef.current = true
       setError(null)
-      setStatus(isOnline ? 'saving' : 'offline')
-      saveDayDebounced(key, payload)
+      setStatus('editing')
+      stageDay(key, payload)
     },
-    [isOnline, key, saveDayDebounced],
+    [key, stageDay],
   )
 
   const updateTasks = useCallback(
     (nextTasks: string[]) => {
       tasksRef.current = nextTasks
       setTasks(nextTasks)
-      queueSave(nextTasks, hoursOverrideRef.current)
+      stageChanges(nextTasks, hoursOverrideRef.current)
     },
-    [queueSave],
+    [stageChanges],
   )
 
   const updateHoursOverride = useCallback(
     (nextOverride: number | null) => {
       hoursOverrideRef.current = nextOverride
       setHoursOverride(nextOverride)
-      queueSave(tasksRef.current, nextOverride)
+      stageChanges(tasksRef.current, nextOverride)
     },
-    [queueSave],
+    [stageChanges],
   )
 
-  const saveNow = useCallback(() => flushDay(key), [flushDay, key])
+  const saveNow = useCallback(() => {
+    if (dirtyRef.current) setStatus(isOnline ? 'saving' : 'offline')
+    return flushDay(key)
+  }, [flushDay, isOnline, key])
 
   return {
     tasks,

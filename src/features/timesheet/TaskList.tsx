@@ -122,6 +122,7 @@ function TaskLine({
   function acceptSuggestion() {
     if (!visibleSuggestion) return
     onChange(visibleSuggestion)
+    onBlur()
     setSuggestion(null)
     focusTask()
   }
@@ -273,6 +274,7 @@ function TaskList({
     const nextTasks = [...tasks]
     nextTasks.splice(index, 1)
     updateTasks(nextTasks, Math.max(0, index - 1), true)
+    onBlur()
   }
 
   function handleKeyDown(
@@ -293,9 +295,13 @@ function TaskList({
 
     if (event.key === 'Enter') {
       event.preventDefault()
-      if (!currentTask.trim()) return
+      if (!currentTask.trim()) {
+        onBlur()
+        return
+      }
 
       if (tasks[index + 1] !== undefined && !tasks[index + 1].trim()) {
+        onBlur()
         textareaRefs.current[index + 1]?.focus()
         return
       }
@@ -303,6 +309,7 @@ function TaskList({
       const nextTasks = [...tasks]
       nextTasks.splice(index + 1, 0, '')
       updateTasks(nextTasks, index + 1)
+      onBlur()
       return
     }
 
@@ -315,6 +322,7 @@ function TaskList({
       const nextTasks = [...tasks]
       nextTasks.splice(index, 1)
       updateTasks(nextTasks, Math.max(0, index - 1), true)
+      onBlur()
       return
     }
 

@@ -4,6 +4,7 @@ import {
   normalizeTasks,
   parseAutoHoursInput,
   parseHoursInput,
+  reconcileTaskDraft,
 } from './dayData'
 
 describe('ensureTrailingEmptyTask', () => {
@@ -12,7 +13,34 @@ describe('ensureTrailingEmptyTask', () => {
     expect(ensureTrailingEmptyTask(['Task'])).toEqual(['Task', ''])
     expect(ensureTrailingEmptyTask(['Task', '', ''])).toEqual(['Task', ''])
     expect(ensureTrailingEmptyTask(['', 'Task', ''])).toEqual(['', 'Task', ''])
-    expect(ensureTrailingEmptyTask(['  '])).toEqual([''])
+    expect(ensureTrailingEmptyTask(['  '])).toEqual(['  '])
+  })
+
+  it('preserves spaces as a task is typed, including on a new line', () => {
+    expect(ensureTrailingEmptyTask(['Task ', ''])).toEqual(['Task ', ''])
+    expect(ensureTrailingEmptyTask(['Task', ' '])).toEqual(['Task', ' '])
+    expect(ensureTrailingEmptyTask(['', ' '])).toEqual(['', ' '])
+  })
+})
+
+describe('reconcileTaskDraft', () => {
+  it('preserves trailing spaces when a normalized save is echoed back', () => {
+    const draft = ['First task ', '']
+    expect(reconcileTaskDraft(['First task', ''], draft)).toBe(draft)
+    expect(reconcileTaskDraft(['First task'], draft)).toBe(draft)
+  })
+
+  it('preserves leading spaces and blank lines in the active draft', () => {
+    const draft = [' First task', '', '  ']
+    expect(reconcileTaskDraft(['First task'], draft)).toBe(draft)
+    expect(reconcileTaskDraft([], [' '])).toEqual([' '])
+  })
+
+  it('still applies remotely changed or deleted task text', () => {
+    expect(reconcileTaskDraft(['Updated task'], ['Original task ', ''])).toEqual([
+      'Updated task',
+    ])
+    expect(reconcileTaskDraft([''], ['Deleted task', ''])).toEqual([''])
   })
 })
 

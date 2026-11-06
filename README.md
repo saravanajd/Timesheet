@@ -23,6 +23,10 @@ For local development, copy `.env.example` to `.env.local` and fill in the match
 
 Install dependencies and run locally with `npm ci` and `npm run dev`.
 
+## Editing entries
+
+Typing changes the local draft only, including spaces. Press **Enter** or leave the task input (click elsewhere or Tab away) to save; a typing pause does not save. Deleting a task or accepting an AI suggestion also commits that action. Hours are saved on Enter or blur. **Unsaved changes** means the draft has not yet been submitted. Commit an entry before closing or reloading the app.
+
 ## Optional AI wording
 
 The optional **Enable AI wording** setting is off by default and is saved in the signed-in user's Firestore settings. To enable it:

@@ -7,16 +7,27 @@ export function ensureTrailingEmptyTask(tasks: readonly string[]): string[] {
 
   while (
     lines.length > 1 &&
-    !lines[lines.length - 1].trim() &&
-    !lines[lines.length - 2].trim()
+    lines[lines.length - 1] === '' &&
+    lines[lines.length - 2] === ''
   ) {
     lines.pop()
   }
 
   if (lines.length === 0) return ['']
   if (lines[lines.length - 1].trim()) lines.push('')
-  else lines[lines.length - 1] = ''
   return lines
+}
+
+export function reconcileTaskDraft(
+  savedTasks: string[],
+  draftTasks: string[],
+): string[] {
+  const normalizedDraft = normalizeTasks(draftTasks)
+  const normalizedSaved = normalizeTasks(savedTasks)
+  return normalizedDraft.length === normalizedSaved.length &&
+    normalizedDraft.every((task, index) => task === normalizedSaved[index])
+    ? draftTasks
+    : savedTasks
 }
 
 export function parseHoursInput(value: string): number | null {
