@@ -8,6 +8,7 @@ import MonthView from './MonthView'
 import RangeNav from './RangeNav'
 import SummaryBar from './SummaryBar'
 import WeekView from './WeekView'
+import { useOnlineStatus } from '../../hooks/useOnlineStatus'
 
 interface TimesheetPageProps {
   uid: string
@@ -24,7 +25,14 @@ function TimesheetPage({ uid }: TimesheetPageProps) {
   const [dayKey, setDayKey] = useState(dateContext.todayKey)
   const [view, setView] = useState<TimesheetViewType>('day')
   const [days, setDays] = useState<DaysByKey>({})
-  const { settings, status, error, saveAutoHours } = useSettings(uid)
+  const {
+    settings,
+    status,
+    error,
+    saveAutoHours,
+    saveAiWordingEnabled,
+  } = useSettings(uid)
+  const isOnline = useOnlineStatus()
   const onDaysChange = useCallback((nextDays: DaysByKey) => {
     setDays(nextDays)
   }, [])
@@ -76,6 +84,8 @@ function TimesheetPage({ uid }: TimesheetPageProps) {
         autoHours={settings.autoHours}
         days={days}
         onAutoHoursChange={saveAutoHours}
+        aiWordingEnabled={settings.aiWordingEnabled}
+        onAiWordingChange={saveAiWordingEnabled}
         status={status}
       />
 
@@ -88,7 +98,9 @@ function TimesheetPage({ uid }: TimesheetPageProps) {
       {view === 'day' ? (
         <DayView
           autoHours={settings.autoHours}
+          aiWordingEnabled={settings.aiWordingEnabled}
           dayKey={dayKey}
+          isOnline={isOnline}
           onDaysChange={onDaysChange}
           todayKey={dateContext.todayKey}
           uid={uid}
@@ -96,7 +108,9 @@ function TimesheetPage({ uid }: TimesheetPageProps) {
       ) : view === 'week' ? (
         <WeekView
           autoHours={settings.autoHours}
+          aiWordingEnabled={settings.aiWordingEnabled}
           dayKey={dayKey}
+          isOnline={isOnline}
           key={`week:${weekRange(dayKey).startKey}`}
           onDaysChange={onDaysChange}
           todayKey={dateContext.todayKey}
@@ -105,7 +119,9 @@ function TimesheetPage({ uid }: TimesheetPageProps) {
       ) : (
         <MonthView
           autoHours={settings.autoHours}
+          aiWordingEnabled={settings.aiWordingEnabled}
           dayKey={dayKey}
+          isOnline={isOnline}
           key={`month:${dayKey.slice(0, 7)}`}
           onDaysChange={onDaysChange}
           todayKey={dateContext.todayKey}

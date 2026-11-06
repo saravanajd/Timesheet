@@ -6,6 +6,8 @@ interface DayViewProps {
   dayKey: string
   todayKey: string
   autoHours: number
+  aiWordingEnabled: boolean
+  isOnline: boolean
   onDaysChange: (days: DaysByKey) => void
 }
 
@@ -14,13 +16,17 @@ function DayView({
   dayKey,
   todayKey,
   autoHours,
+  aiWordingEnabled,
+  isOnline,
   onDaysChange,
 }: DayViewProps) {
   return (
     <section className="timesheet-view" aria-label="Day view">
       <DayContent
         autoHours={autoHours}
+        aiWordingEnabled={aiWordingEnabled}
         dayKey={dayKey}
+        isOnline={isOnline}
         key={dayKey}
         onDaysChange={onDaysChange}
         todayKey={todayKey}

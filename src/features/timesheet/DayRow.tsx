@@ -12,6 +12,8 @@ interface DayRowProps {
   isToday: boolean
   keepTrailingEmpty?: boolean
   autoFocusLastLine?: boolean
+  aiWordingEnabled: boolean
+  isOnline: boolean
   showMonth?: boolean
   navigationRefs?: MutableRefObject<Array<HTMLTextAreaElement | null>>
   navigationOffset?: number
@@ -27,6 +29,8 @@ function DayRow({
   isToday,
   keepTrailingEmpty = false,
   autoFocusLastLine = false,
+  aiWordingEnabled,
+  isOnline,
   showMonth = false,
   navigationRefs,
   navigationOffset,
@@ -52,6 +56,8 @@ function DayRow({
       </div>
       <TaskList
         autoFocusLastLine={autoFocusLastLine}
+        aiWordingEnabled={aiWordingEnabled}
+        isOnline={isOnline}
         keepTrailingEmpty={keepTrailingEmpty}
         navigationOffset={navigationOffset}
         navigationRefs={navigationRefs}

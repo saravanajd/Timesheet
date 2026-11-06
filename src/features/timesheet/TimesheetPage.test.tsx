@@ -13,4 +13,16 @@ describe('TimesheetPage', () => {
       ),
     ).toContain('Timesheet')
   })
+
+  it('keeps AI wording disabled by default', () => {
+    const markup = renderToStaticMarkup(
+      <ToastProvider>
+        <TimesheetPage uid="test-user" />
+      </ToastProvider>,
+    )
+
+    expect(markup).toContain('Enable AI wording')
+    expect(markup).not.toContain('checked=""')
+    expect(markup).not.toContain('Improve wording for task')
+  })
 })

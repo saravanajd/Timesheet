@@ -9,6 +9,8 @@ interface MonthViewProps {
   dayKey: string
   todayKey: string
   autoHours: number
+  aiWordingEnabled: boolean
+  isOnline: boolean
   onDaysChange: (days: DaysByKey) => void
 }
 
@@ -17,6 +19,8 @@ function MonthView({
   dayKey,
   todayKey,
   autoHours,
+  aiWordingEnabled,
+  isOnline,
   onDaysChange,
 }: MonthViewProps) {
   const requestedRange = monthRange(dayKey)
@@ -57,8 +61,10 @@ function MonthView({
         {keys.map((key) => (
           <DayRow
             autoHours={autoHours}
+            aiWordingEnabled={aiWordingEnabled}
             day={days[key] ?? { tasks: [], hoursOverride: null }}
             dayKey={key}
+            isOnline={isOnline}
             isToday={key === todayKey}
             key={key}
             navigationOffset={offsets.get(key)}

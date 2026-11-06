@@ -1,5 +1,14 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
-import type { KeyboardEvent, MutableRefObject } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type {
+  KeyboardEvent,
+  MutableRefObject,
+  Ref,
+} from 'react'
+import { useToast } from '../../hooks/useToast'
+import {
+  getAIWordingErrorMessage,
+  improveWording,
+} from '../../lib/aiWording'
 import { ensureTrailingEmptyTask } from '../../lib/dayData'
 
 interface TaskListProps {
@@ -7,10 +16,201 @@ interface TaskListProps {
   onTasksChange: (tasks: string[]) => void
   onBlur: () => void
   autoFocusLastLine: boolean
+  aiWordingEnabled: boolean
+  isOnline: boolean
   keepTrailingEmpty?: boolean
   placeholder?: string
   navigationRefs?: MutableRefObject<Array<HTMLTextAreaElement | null>>
   navigationOffset?: number
+}
+
+interface TaskLineProps {
+  task: string
+  index: number
+  placeholder?: string
+  aiWordingEnabled: boolean
+  isOnline: boolean
+  textareaRef: Ref<HTMLTextAreaElement>
+  focusTask: () => void
+  onChange: (value: string) => void
+  onDelete: () => void
+  onBlur: () => void
+  onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void
+}
+
+function TaskLine({
+  task,
+  index,
+  placeholder,
+  aiWordingEnabled,
+  isOnline,
+  textareaRef,
+  focusTask,
+  onChange,
+  onDelete,
+  onBlur,
+  onKeyDown,
+}: TaskLineProps) {
+  const { showError } = useToast()
+  const [suggestion, setSuggestion] = useState<{
+    text: string
+    sourceTask: string
+  } | null>(null)
+  const [runningTask, setRunningTask] = useState<string | null>(null)
+  const isRunning = runningTask === task
+  const visibleSuggestion =
+    suggestion?.sourceTask === task ? suggestion.text : null
+  const suggestionRef = useRef<HTMLDivElement>(null)
+  const requestVersionRef = useRef(0)
+  const previousTaskRef = useRef(task)
+  const taskRef = useRef(task)
+  const canShowSuggestionRef = useRef(aiWordingEnabled && isOnline)
+
+  useEffect(() => {
+    if (previousTaskRef.current !== task) {
+      previousTaskRef.current = task
+      taskRef.current = task
+      requestVersionRef.current += 1
+    }
+    canShowSuggestionRef.current = aiWordingEnabled && isOnline
+    if (!canShowSuggestionRef.current) {
+      requestVersionRef.current += 1
+    }
+  }, [aiWordingEnabled, isOnline, task])
+
+  useEffect(() => {
+    if (visibleSuggestion) suggestionRef.current?.focus()
+  }, [visibleSuggestion])
+
+  async function requestImprovement() {
+    if (!aiWordingEnabled || !isOnline || isRunning || !task.trim()) return
+
+    setRunningTask(task)
+    const requestVersion = requestVersionRef.current
+    try {
+      const improvedText = await improveWording(task)
+      if (
+        requestVersion === requestVersionRef.current &&
+        taskRef.current === task &&
+        canShowSuggestionRef.current
+      ) {
+        setSuggestion({ text: improvedText, sourceTask: task })
+      }
+    } catch (error: unknown) {
+      showError(getAIWordingErrorMessage(error))
+    } finally {
+      setRunningTask((current) => (current === task ? null : current))
+    }
+  }
+
+  function handleTaskKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'i') {
+      event.preventDefault()
+      void requestImprovement()
+      return
+    }
+    onKeyDown(event)
+  }
+
+  function handleChange(value: string) {
+    taskRef.current = value
+    requestVersionRef.current += 1
+    setSuggestion(null)
+    onChange(value)
+  }
+
+  function acceptSuggestion() {
+    if (!visibleSuggestion) return
+    onChange(visibleSuggestion)
+    setSuggestion(null)
+    focusTask()
+  }
+
+  function discardSuggestion() {
+    setSuggestion(null)
+    focusTask()
+  }
+
+  return (
+    <div className="timesheet-task">
+      <textarea
+        aria-label={`Task ${index + 1}`}
+        onBlur={onBlur}
+        onChange={(event) => handleChange(event.currentTarget.value)}
+        onKeyDown={handleTaskKeyDown}
+        placeholder={index === 0 ? placeholder : undefined}
+        ref={textareaRef}
+        rows={1}
+        value={task}
+      />
+      {aiWordingEnabled && isOnline && task.trim() && (
+        <div className="timesheet-task-actions">
+          <button
+            aria-label={`Improve wording for task ${index + 1}`}
+            aria-busy={isRunning}
+            className="timesheet-improve-task"
+            disabled={isRunning}
+            onClick={() => void requestImprovement()}
+            title={isRunning ? 'Improving wording…' : 'Improve wording (Ctrl+I)'}
+            type="button"
+          >
+            {isRunning ? '…' : '✨'}
+          </button>
+          <button
+            aria-label={`Delete task ${index + 1}`}
+            className="timesheet-delete-task"
+            onClick={onDelete}
+            title="Delete task (Ctrl+Delete)"
+            type="button"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      {(!aiWordingEnabled || !isOnline || !task.trim()) && task.trim() && (
+        <button
+          aria-label={`Delete task ${index + 1}`}
+          className="timesheet-delete-task"
+          onClick={onDelete}
+          title="Delete task (Ctrl+Delete)"
+          type="button"
+        >
+          ✕
+        </button>
+      )}
+      {visibleSuggestion && (
+        <div
+          aria-label={`Suggested wording for task ${index + 1}`}
+          className="timesheet-ai-suggestion"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              discardSuggestion()
+            } else if (
+              event.key === 'Enter' &&
+              event.target === event.currentTarget
+            ) {
+              event.preventDefault()
+              acceptSuggestion()
+            }
+          }}
+          ref={suggestionRef}
+          role="group"
+          tabIndex={0}
+        >
+          <p>{visibleSuggestion}</p>
+          <div className="timesheet-ai-suggestion-actions">
+            <button onClick={acceptSuggestion} type="button">
+              Accept
+            </button>
+            <button onClick={discardSuggestion} type="button">
+              Discard
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function TaskList({
@@ -18,6 +218,8 @@ function TaskList({
   onTasksChange,
   onBlur,
   autoFocusLastLine,
+  aiWordingEnabled,
+  isOnline,
   keepTrailingEmpty = true,
   placeholder = 'Add task…',
   navigationRefs,
@@ -136,38 +338,29 @@ function TaskList({
   return (
     <div className="timesheet-tasks">
       {tasks.map((task, index) => (
-        <div className="timesheet-task" key={index}>
-          <textarea
-            aria-label={`Task ${index + 1}`}
-            onBlur={onBlur}
-            onChange={(event) => {
-              const nextTasks = [...tasks]
-              nextTasks[index] = event.currentTarget.value
-              updateTasks(nextTasks)
-            }}
-            onKeyDown={(event) => handleKeyDown(event, index)}
-            placeholder={index === 0 ? placeholder : undefined}
-            ref={(textarea) => {
-              textareaRefs.current[index] = textarea
-              if (navigationRefs) {
-                navigationRefs.current[navigationOffset + index] = textarea
-              }
-            }}
-            rows={1}
-            value={task}
-          />
-          {task.trim() && (
-            <button
-              aria-label={`Delete task ${index + 1}`}
-              className="timesheet-delete-task"
-              onClick={() => deleteTask(index)}
-              title="Delete task (Ctrl+Delete)"
-              type="button"
-            >
-              ✕
-            </button>
-          )}
-        </div>
+        <TaskLine
+          aiWordingEnabled={aiWordingEnabled}
+          index={index}
+          isOnline={isOnline}
+          key={index}
+          onBlur={onBlur}
+          onChange={(value) => {
+            const nextTasks = [...tasks]
+            nextTasks[index] = value
+            updateTasks(nextTasks)
+          }}
+          onDelete={() => deleteTask(index)}
+          onKeyDown={(event) => handleKeyDown(event, index)}
+          focusTask={() => textareaRefs.current[index]?.focus()}
+          placeholder={placeholder}
+          task={task}
+          textareaRef={(textarea) => {
+            textareaRefs.current[index] = textarea
+            if (navigationRefs) {
+              navigationRefs.current[navigationOffset + index] = textarea
+            }
+          }}
+        />
       ))}
     </div>
   )

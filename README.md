@@ -23,6 +23,17 @@ For local development, copy `.env.example` to `.env.local` and fill in the match
 
 Install dependencies and run locally with `npm ci` and `npm run dev`.
 
+## Optional AI wording
+
+The optional **Enable AI wording** setting is off by default and is saved in the signed-in user's Firestore settings. To enable it:
+
+1. In the [Firebase Console](https://console.firebase.google.com/), open **AI Logic** and enable Firebase AI Logic for the project.
+2. Choose **Gemini Developer API** as the provider. No API key is added to the app or its environment files; the Firebase AI Logic SDK handles requests from the signed-in app.
+3. Keep the Firebase project on the **Spark plan** without linking a Cloud Billing account. The selected model is `gemini-3.8-flash`, listed in the [Firebase AI Logic supported models](https://firebase.google.com/docs/ai-logic/models) as a non-preview Flash model that does not require billing. Availability and free-tier quotas are subject to Google's current documentation and limits.
+4. Sign in, turn on **Enable AI wording**, and use the ✨ button on a task or press **Ctrl+I**. Only the selected task text is sent; suggestions are never saved unless accepted.
+
+See [Firebase AI Logic pricing](https://firebase.google.com/docs/ai-logic/pricing) for provider-specific billing requirements. Do not upgrade this project to Blaze for this feature.
+
 Firebase web configuration values are included in the client bundle and are not secret. The repository secrets below are used to configure the deployment build, not to make these public web values confidential. Firestore security rules protect the data; never place private credentials in `VITE_FIREBASE_*`.
 
 ## GitHub Pages deployment

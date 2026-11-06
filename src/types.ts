@@ -9,4 +9,5 @@ export type TimesheetViewType = 'day' | 'week' | 'month'
 export interface UserSettings {
   autoHours: number
   timeZone: string
+  aiWordingEnabled: boolean
 }

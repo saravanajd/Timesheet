@@ -8,6 +8,8 @@ interface DayContentProps {
   dayKey: string
   todayKey: string
   autoHours: number
+  aiWordingEnabled: boolean
+  isOnline: boolean
   onDaysChange: (days: DaysByKey) => void
 }
 
@@ -16,6 +18,8 @@ function DayContent({
   dayKey,
   todayKey,
   autoHours,
+  aiWordingEnabled,
+  isOnline,
   onDaysChange,
 }: DayContentProps) {
   const {
@@ -43,8 +47,10 @@ function DayContent({
         <DayRow
           autoFocusLastLine={status !== 'loading'}
           autoHours={autoHours}
+          aiWordingEnabled={aiWordingEnabled}
           day={day}
           dayKey={dayKey}
+          isOnline={isOnline}
           isToday={dayKey === todayKey}
           showMonth
           onBlur={() => {

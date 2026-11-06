@@ -6,8 +6,10 @@ import type { SettingsStatus } from '../../hooks/useSettings'
 interface SummaryBarProps {
   days: DaysByKey
   autoHours: number
+  aiWordingEnabled: boolean
   status: SettingsStatus
   onAutoHoursChange: (autoHours: number) => void
+  onAiWordingChange: (enabled: boolean) => void
 }
 
 function formatHours(hours: number): string {
@@ -17,8 +19,10 @@ function formatHours(hours: number): string {
 function SummaryBar({
   days,
   autoHours,
+  aiWordingEnabled,
   status,
   onAutoHoursChange,
+  onAiWordingChange,
 }: SummaryBarProps) {
   const { totalHours, daysWorked } = rangeTotals(days, autoHours)
 
@@ -30,6 +34,15 @@ function SummaryBar({
       <span>
         Days worked <strong>{daysWorked}</strong>
       </span>
+      <label className="timesheet-ai-setting">
+        <input
+          checked={aiWordingEnabled}
+          className="timesheet-ai-setting-checkbox"
+          onChange={(event) => onAiWordingChange(event.currentTarget.checked)}
+          type="checkbox"
+        />
+        Enable AI wording
+      </label>
       <label>
         Auto hours per day
         <input

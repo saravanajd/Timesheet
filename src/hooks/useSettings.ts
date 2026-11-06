@@ -9,6 +9,7 @@ export type SettingsStatus = 'loading' | 'saving' | 'saved' | 'error'
 const DEFAULT_SETTINGS: UserSettings = {
   autoHours: 9,
   timeZone: 'America/Chicago',
+  aiWordingEnabled: false,
 }
 
 function getErrorMessage(error: unknown): string {
@@ -28,6 +29,7 @@ export function useSettings(uid: string) {
   )
   const timeZoneRef = useRef(DEFAULT_SETTINGS.timeZone)
   const pendingAutoHoursRef = useRef<number | null>(null)
+  const pendingAiWordingRef = useRef<boolean | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const flushRef = useRef<() => Promise<void>>(async () => {})
 
@@ -40,9 +42,11 @@ export function useSettings(uid: string) {
 
     const flush = async () => {
       const autoHours = pendingAutoHoursRef.current
-      if (autoHours === null || writing) return
+      const aiWordingEnabled = pendingAiWordingRef.current
+      if ((autoHours === null && aiWordingEnabled === null) || writing) return
 
       pendingAutoHoursRef.current = null
+      pendingAiWordingRef.current = null
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = null
       writing = true
@@ -51,17 +55,27 @@ export function useSettings(uid: string) {
       try {
         await setDoc(
           settingsRef,
-          { autoHours, timeZone: timeZoneRef.current },
+          {
+            ...(autoHours === null ? {} : { autoHours }),
+            ...(aiWordingEnabled === null ? {} : { aiWordingEnabled }),
+            timeZone: timeZoneRef.current,
+          },
           { merge: true },
         )
         if (active) {
           setError(null)
           setStatus(
-            pendingAutoHoursRef.current === null ? 'saved' : 'saving',
+            pendingAutoHoursRef.current === null &&
+              pendingAiWordingRef.current === null
+              ? 'saved'
+              : 'saving',
           )
         }
         writing = false
-        if (pendingAutoHoursRef.current !== null) {
+        if (
+          pendingAutoHoursRef.current !== null ||
+          pendingAiWordingRef.current !== null
+        ) {
           if (timerRef.current) clearTimeout(timerRef.current)
           timerRef.current = setTimeout(() => {
             void flush()
@@ -75,7 +89,10 @@ export function useSettings(uid: string) {
           showError(`Could not save settings: ${message}`)
         }
         writing = false
-        if (pendingAutoHoursRef.current !== null) {
+        if (
+          pendingAutoHoursRef.current !== null ||
+          pendingAiWordingRef.current !== null
+        ) {
           if (timerRef.current) clearTimeout(timerRef.current)
           timerRef.current = setTimeout(() => {
             void flush()
@@ -100,18 +117,34 @@ export function useSettings(uid: string) {
             typeof data.timeZone === 'string'
               ? data.timeZone
               : DEFAULT_SETTINGS.timeZone
+          const aiWordingEnabled =
+            typeof data.aiWordingEnabled === 'boolean'
+              ? data.aiWordingEnabled
+              : DEFAULT_SETTINGS.aiWordingEnabled
 
           timeZoneRef.current = timeZone
-          if (pendingAutoHoursRef.current === null && !writing) {
-            setSettings({ autoHours, timeZone })
+          if (
+            pendingAutoHoursRef.current === null &&
+            pendingAiWordingRef.current === null &&
+            !writing
+          ) {
+            setSettings({ autoHours, timeZone, aiWordingEnabled })
           }
-        } else if (pendingAutoHoursRef.current === null && !writing) {
+        } else if (
+          pendingAutoHoursRef.current === null &&
+          pendingAiWordingRef.current === null &&
+          !writing
+        ) {
           timeZoneRef.current = DEFAULT_SETTINGS.timeZone
           setSettings(DEFAULT_SETTINGS)
         }
 
         setError(null)
-        if (pendingAutoHoursRef.current === null && !writing) {
+        if (
+          pendingAutoHoursRef.current === null &&
+          pendingAiWordingRef.current === null &&
+          !writing
+        ) {
           setStatus('saved')
         }
       },
@@ -129,7 +162,12 @@ export function useSettings(uid: string) {
       unsubscribe()
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = null
-      if (pendingAutoHoursRef.current !== null) void flush()
+      if (
+        pendingAutoHoursRef.current !== null ||
+        pendingAiWordingRef.current !== null
+      ) {
+        void flush()
+      }
       flushRef.current = async () => {}
     }
   }, [showError, uid])
@@ -151,5 +189,16 @@ export function useSettings(uid: string) {
     }, 600)
   }, [])
 
-  return { settings, status, error, saveAutoHours }
+  const saveAiWordingEnabled = useCallback((aiWordingEnabled: boolean) => {
+    pendingAiWordingRef.current = aiWordingEnabled
+    setSettings((current) => ({ ...current, aiWordingEnabled }))
+    setError(null)
+    setStatus('saving')
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => {
+      void flushRef.current()
+    }, 600)
+  }, [])
+
+  return { settings, status, error, saveAutoHours, saveAiWordingEnabled }
 }

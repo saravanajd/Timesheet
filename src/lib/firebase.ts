@@ -23,7 +23,7 @@ export const firebaseConfigError = hasFirebaseConfig
   ? null
   : 'Firebase is not configured. Copy .env.example to .env.local and add your Firebase web app settings.'
 
-const app = hasFirebaseConfig
+export const app = hasFirebaseConfig
   ? (getApps().find((existingApp) => existingApp.name === '[DEFAULT]') ??
     initializeApp(firebaseConfig))
   : null
