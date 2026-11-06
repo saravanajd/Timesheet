@@ -1,6 +1,6 @@
 import { app, auth } from './firebase'
 
-const MODEL_NAME = 'gemini-3.8-flash'
+const MODEL_NAME = 'gemini-3.5-flash-lite'
 const SYSTEM_INSTRUCTION =
   'Rewrite the text as one clear, concise, professional timesheet task line in the same language. Keep the meaning, add no new details, and return only the rewritten text.'
 const REQUEST_INTERVAL_MS = 2000
