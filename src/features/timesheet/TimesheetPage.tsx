@@ -1,7 +1,11 @@
-function TimesheetPage() {
-  return (
-    <h1 className="h5 mb-0">Timesheet</h1>
-  )
+import DayView from './DayView'
+
+interface TimesheetPageProps {
+  uid: string
+}
+
+function TimesheetPage({ uid }: TimesheetPageProps) {
+  return <DayView uid={uid} />
 }
 
 export default TimesheetPage

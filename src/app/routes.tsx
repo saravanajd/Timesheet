@@ -40,8 +40,14 @@ function AppRoutes() {
             <AppLayout user={user} error={error} onSignOut={signOut} />
           }
         >
-          <Route path="/" element={<TimesheetPage />} />
-          <Route path="*" element={<TimesheetPage />} />
+          <Route
+            path="/"
+            element={<TimesheetPage key={user.uid} uid={user.uid} />}
+          />
+          <Route
+            path="*"
+            element={<TimesheetPage key={user.uid} uid={user.uid} />}
+          />
         </Route>
       </Routes>
     </HashRouter>

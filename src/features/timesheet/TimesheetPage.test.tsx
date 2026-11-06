@@ -4,6 +4,8 @@ import TimesheetPage from './TimesheetPage'
 
 describe('TimesheetPage', () => {
   it('shows the app title', () => {
-    expect(renderToStaticMarkup(<TimesheetPage />)).toContain('Timesheet')
+    expect(renderToStaticMarkup(<TimesheetPage uid="test-user" />)).toContain(
+      'Timesheet',
+    )
   })
 })
