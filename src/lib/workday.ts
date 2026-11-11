@@ -6,11 +6,9 @@ import {
   format,
   getDay,
   isAfter,
-  isBefore,
   parseISO,
   startOfMonth,
   startOfWeek,
-  subMonths,
 } from 'date-fns'
 import { formatInTimeZone } from 'date-fns-tz'
 
@@ -20,7 +18,6 @@ export interface DateRange {
 }
 
 export interface AllowedWindow {
-  minKey: string
   maxKey: string
 }
 
@@ -63,7 +60,6 @@ export function isWeekend(key: string): boolean {
 export function allowedWindow(now: Date): AllowedWindow {
   const currentDate = parseDateKey(getWorkdayKey(now))
   return {
-    minKey: toDateKey(startOfMonth(subMonths(currentDate, 1))),
     maxKey: toDateKey(endOfMonth(currentDate)),
   }
 }
@@ -74,18 +70,16 @@ export function clampRange(
 ): DateRange | null {
   const start = parseDateKey(range.startKey)
   const end = parseDateKey(range.endKey)
-  const minimum = parseDateKey(window.minKey)
   const maximum = parseDateKey(window.maxKey)
 
-  if (isAfter(start, end) || isAfter(minimum, maximum)) return null
+  if (isAfter(start, end)) return null
 
-  const clampedStart = isBefore(start, minimum) ? minimum : start
   const clampedEnd = isAfter(end, maximum) ? maximum : end
 
-  if (isAfter(clampedStart, clampedEnd)) return null
+  if (isAfter(start, clampedEnd)) return null
 
   return {
-    startKey: toDateKey(clampedStart),
+    startKey: toDateKey(start),
     endKey: toDateKey(clampedEnd),
   }
 }

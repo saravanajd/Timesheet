@@ -82,25 +82,29 @@ describe('date ranges and labels', () => {
     expect(formatMonthLabel('2026-11-06')).toBe('November 2026')
   })
 
-  it('calculates the current and previous month window across year boundaries', () => {
+  it('sets the end of the current month as the navigation limit', () => {
     expect(allowedWindow(new Date('2026-11-06T18:00:00Z'))).toEqual({
-      minKey: '2026-10-01',
       maxKey: '2026-11-30',
     })
     expect(allowedWindow(new Date('2027-01-15T18:00:00Z'))).toEqual({
-      minKey: '2026-12-01',
       maxKey: '2027-01-31',
     })
   })
 
-  it('clamps overlapping ranges and returns null for disjoint ranges', () => {
-    const window = { minKey: '2026-10-01', maxKey: '2026-11-30' }
+  it('allows older ranges and clamps ranges beyond the current month', () => {
+    const window = { maxKey: '2026-11-30' }
     expect(
       clampRange(
         { startKey: '2026-09-28', endKey: '2026-10-04' },
         window,
       ),
-    ).toEqual({ startKey: '2026-10-01', endKey: '2026-10-04' })
+    ).toEqual({ startKey: '2026-09-28', endKey: '2026-10-04' })
+    expect(
+      clampRange(
+        { startKey: '2026-11-28', endKey: '2026-12-04' },
+        window,
+      ),
+    ).toEqual({ startKey: '2026-11-28', endKey: '2026-11-30' })
     expect(
       clampRange(
         { startKey: '2026-12-01', endKey: '2026-12-07' },

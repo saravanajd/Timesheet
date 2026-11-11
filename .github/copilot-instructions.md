@@ -16,7 +16,7 @@ docs/timesheet-entry.html. Match it; do not redesign.
 - Task inputs are controlled auto-growing textareas. Keyboard behaviour must match the prototype
   (Enter, Backspace on empty, Ctrl+Delete, arrow navigation). Manage focus with refs, not by re-querying the DOM.
 - Free-only: GitHub Pages hosting, Firebase Spark plan, Auth + Firestore only. No Cloud Storage, no Cloud Functions, no Firebase Hosting, no paid services.
-- Only the current and previous month are ever loaded or navigable. Clamp ranges in src/lib/workday.ts (`minKey`, `maxKey`).
+- Previous months remain loaded on demand and navigable. Clamp ranges in src/lib/workday.ts to the end of the current month (`maxKey`).
 - One realtime listener per visible range; unsubscribe on view change. Debounce writes.
 - Do not add libraries without asking. Keep the UI minimal and fast.
 - After each phase run `npm run build` and `npm test` and fix errors before reporting done.

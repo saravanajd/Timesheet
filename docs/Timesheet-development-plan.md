@@ -24,7 +24,7 @@ React 18, TypeScript, Vite, Bootstrap 5 (utilities and layout only; the look fol
 - **Hosting:** GitHub Pages only. Do not use Firebase Hosting.
 - **Firebase plan:** stay on the free **Spark** plan. Never upgrade to Blaze. Spark has no card and cannot produce a bill; if a quota runs out, the service just stops until it resets. Use only Auth and Firestore. Do not use Cloud Storage or Cloud Functions.
 - **Quotas to design for:** Firestore free tier is 1 GiB storage, 50,000 reads/day and 20,000 writes/day. This app needs a tiny fraction of that (about 60 documents loaded per month view, a few dozen writes per day).
-- **Two-month window:** the app only shows the **current month and the previous month**. Navigation (Day, Week and Month) cannot go before the 1st of the previous month, and cannot go past the end of the current month. Older documents may stay in Firestore (they cost nothing); the app simply never loads them.
+- **Month navigation:** previous months remain viewable and navigable. Navigation cannot go past the end of the current month. Older documents stay in Firestore and can be loaded when selected.
 - **Keep reads low:** one realtime listener per visible range (unsubscribe when the view changes), debounced saves, no polling.
 
 ## 3. Data model (Firestore)
@@ -41,7 +41,7 @@ users/{uid}/settings/main
 ```
 
 - Do not create a document for a day that has no tasks and no override. Delete it if it becomes empty.
-- Range loading (week/month): query `days` by document id between the first and last date key of the range. Clamp every range to the two-month window (`minKey` = first day of previous month, `maxKey` = last day of current month, both computed from the workday date in `workday.ts`).
+- Range loading (week/month): query `days` by document id between the first and last date key of the range. Clamp ranges to the end of the current month (`maxKey`, computed from the workday date in `workday.ts`); do not impose a lower date limit.
 
 Security rules:
 
@@ -126,7 +126,7 @@ The approved UI and behaviour are in docs/prototype.html. Match it; do not redes
 - Task inputs are controlled auto-growing textareas. Keyboard behaviour must match the prototype
   (Enter, Backspace on empty, Ctrl+Delete, arrow navigation). Manage focus with refs, not by re-querying the DOM.
 - Free-only: GitHub Pages hosting, Firebase Spark plan, Auth + Firestore only. No Cloud Storage, no Cloud Functions, no Firebase Hosting, no paid services.
-- Only the current and previous month are ever loaded or navigable. Clamp ranges in src/lib/workday.ts (`minKey`, `maxKey`).
+- Previous months remain loaded on demand and navigable. Clamp ranges in src/lib/workday.ts to the end of the current month (`maxKey`).
 - One realtime listener per visible range; unsubscribe on view change. Debounce writes.
 - Do not add libraries without asking. Keep the UI minimal and fast.
 - After each phase run `npm run build` and `npm test` and fix errors before reporting done.
@@ -150,19 +150,19 @@ Give the agent one prompt at a time. Test in the browser, then commit before mov
 
 ### Phase 3: Workday and hours logic (no UI)
 **Prompt:**
-> Implement `src/lib/workday.ts`: `getWorkdayKey(now)` (the calendar date in America/Chicago, converted with date-fns-tz), `weekRange(key)` (Monday to Sunday), `monthRange(key)`, `isWeekend(key)`, label helpers. Implement `src/lib/hours.ts` (`displayHours`, `rangeTotals`) and `src/lib/copyText.ts` using the format in the plan. Also add `allowedWindow(now)` returning `{minKey, maxKey}` (first day of the previous month to last day of the current month) and `clampRange`. Write Vitest tests with fixed UTC instants: 5:00 PM and 1:00 AM India time (Nov 6 and Nov 7) must both give the same Chicago date; the key changes exactly at Chicago midnight; the daylight saving start and end days in March and November; month boundaries; the 2-month window across a year boundary (January looks back to December) and the override rules.
+> Implement `src/lib/workday.ts`: `getWorkdayKey(now)` (the calendar date in America/Chicago, converted with date-fns-tz), `weekRange(key)` (Monday to Sunday), `monthRange(key)`, `isWeekend(key)`, label helpers. Implement `src/lib/hours.ts` (`displayHours`, `rangeTotals`) and `src/lib/copyText.ts` using the format in the plan. Also add `allowedWindow(now)` returning `{maxKey}` (the last day of the current month) and `clampRange`, with no lower date limit. Write Vitest tests with fixed UTC instants: 5:00 PM and 1:00 AM India time (Nov 6 and Nov 7) must both give the same Chicago date; the key changes exactly at Chicago midnight; the daylight saving start and end days in March and November; month boundaries; the current-month upper navigation limit and older month ranges; and the override rules.
 
 **Done when:** all tests pass.
 
 ### Phase 4: Day view
 **Prompt:**
-> Build Day view. Create `useSettings` and `useDay(key)` (realtime `onSnapshot` on `users/{uid}/days/{key}`, debounced save, delete the document when it has no tasks and no override). Build `TaskList` with auto-growing textareas and the exact keyboard behaviour in the plan, the ✕ delete button, `HoursInput` with auto/override behaviour, and a Saved/Saving indicator. Day view opens on today's workday date, shows one trailing empty line and focuses it. Add previous/next day buttons and a label that jumps to today. Disable the previous button at the start of the allowed 2-month window and the next button at the end of the current month.
+> Build Day view. Create `useSettings` and `useDay(key)` (realtime `onSnapshot` on `users/{uid}/days/{key}`, debounced save, delete the document when it has no tasks and no override). Build `TaskList` with auto-growing textareas and the exact keyboard behaviour in the plan, the ✕ delete button, `HoursInput` with auto/override behaviour, and a Saved/Saving indicator. Day view opens on today's workday date, shows one trailing empty line and focuses it. Add previous/next day buttons and a label that jumps to today. Allow previous navigation without a lower bound and disable next navigation at the end of the current month.
 
 **Done when:** I can add, edit, delete tasks and override hours with only the keyboard, and reload shows the same data.
 
 ### Phase 5: Week and Month views, weekends
 **Prompt:**
-> Add Day/Week/Month switcher and `useDaysRange(start, end)` (one query by document id range with `onSnapshot`). Reuse `DayRow` and `TaskList` for all views. Week is Monday to Sunday. Highlight Saturday and Sunday with an amber tint and "Weekend · day off" placeholder. Respect the 2-month window: disable previous/next when the range would leave `allowedWindow`, and for Week view that straddles the limit only show days inside the window. Mark today, scroll it into view, and add the summary bar (total hours, days worked, auto hours per day setting). Arrow keys move between days.
+> Add Day/Week/Month switcher and `useDaysRange(start, end)` (one query by document id range with `onSnapshot`). Reuse `DayRow` and `TaskList` for all views. Week is Monday to Sunday. Highlight Saturday and Sunday with an amber tint and "Weekend · day off" placeholder. Allow navigation to older dates, but disable next when the range would go past the end of the current month; for Week view that straddles the upper limit only show days through the current month end. Mark today, scroll it into view, and add the summary bar (total hours, days worked, auto hours per day setting). Arrow keys move between days.
 
 **Done when:** it behaves like the prototype in all three views.
 
