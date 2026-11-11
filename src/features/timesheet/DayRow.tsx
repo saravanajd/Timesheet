@@ -1,4 +1,4 @@
-import type { MutableRefObject, Ref } from 'react'
+import type { MutableRefObject, ReactNode, Ref } from 'react'
 import { displayHours } from '../../lib/hours'
 import { formatDayLabel, isWeekend } from '../../lib/workday'
 import type { DayEntry } from '../../types'
@@ -17,6 +17,7 @@ interface DayRowProps {
   showMonth?: boolean
   navigationRefs?: MutableRefObject<Array<HTMLTextAreaElement | null>>
   navigationOffset?: number
+  taskListFooter?: ReactNode
   rowRef?: Ref<HTMLDivElement>
   onDayChange: (day: DayEntry) => void
   onBlur: () => void
@@ -34,6 +35,7 @@ function DayRow({
   showMonth = false,
   navigationRefs,
   navigationOffset,
+  taskListFooter,
   rowRef,
   onDayChange,
   onBlur,
@@ -61,6 +63,7 @@ function DayRow({
         keepTrailingEmpty={keepTrailingEmpty}
         navigationOffset={navigationOffset}
         navigationRefs={navigationRefs}
+        footer={taskListFooter}
         onBlur={onBlur}
         onTasksChange={(tasks) => onDayChange({ ...day, tasks })}
         placeholder={weekend ? 'Weekend · day off' : 'Add task…'}

@@ -27,6 +27,10 @@ Install dependencies and run locally with `npm ci` and `npm run dev`.
 
 Typing changes the local draft only, including spaces. Press **Enter** or leave the task input (click elsewhere or Tab away) to save; a typing pause does not save. Deleting a task or accepting an AI suggestion also commits that action. Hours are saved on Enter or blur. **Unsaved changes** means the draft has not yet been submitted. Commit an entry before closing or reloading the app.
 
+## Voice entry
+
+Day view includes voice entry in browsers that provide the built-in Web Speech API (`SpeechRecognition` or `webkitSpeechRecognition`). The site must be open over HTTPS (including when installed as a PWA), the browser needs an internet connection, and the browser may ask for microphone permission. Use the mic button or **Alt+M** to start or stop; **Escape** stops listening. Interim words are only a preview, while each recognized final phrase is added as a task and saved normally. Browser support and speech service availability vary.
+
 ## Optional AI wording
 
 The optional **Enable AI wording** setting is off by default and is saved in the signed-in user's Firestore settings. To enable it:

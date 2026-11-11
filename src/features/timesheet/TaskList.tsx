@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type {
   KeyboardEvent,
   MutableRefObject,
+  ReactNode,
   Ref,
 } from 'react'
 import { useToast } from '../../hooks/useToast'
@@ -22,6 +23,7 @@ interface TaskListProps {
   placeholder?: string
   navigationRefs?: MutableRefObject<Array<HTMLTextAreaElement | null>>
   navigationOffset?: number
+  footer?: ReactNode
 }
 
 interface TaskLineProps {
@@ -225,6 +227,7 @@ function TaskList({
   placeholder = 'Add task…',
   navigationRefs,
   navigationOffset = 0,
+  footer,
 }: TaskListProps) {
   const textareaRefs = useRef<Array<HTMLTextAreaElement | null>>([])
   const pendingFocusRef = useRef<{ index: number; atEnd: boolean } | null>(null)
@@ -370,6 +373,7 @@ function TaskList({
           }}
         />
       ))}
+      {footer}
     </div>
   )
 }

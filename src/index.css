@@ -230,6 +230,24 @@ body {
   margin-left: 0;
 }
 
+.timesheet-summary .timesheet-voice-setting {
+  margin-left: 0;
+}
+
+.timesheet-summary .timesheet-voice-setting select {
+  max-width: 150px;
+  border: 1px solid var(--line-color);
+  border-radius: 6px;
+  padding: 3px 6px;
+  color: var(--text-color);
+  background: var(--card-bg);
+  font: inherit;
+}
+
+.timesheet-summary .timesheet-voice-setting small {
+  color: var(--muted-color);
+}
+
 .timesheet-summary .timesheet-ai-setting-checkbox {
   width: auto;
   margin: 0;
@@ -336,6 +354,60 @@ body {
 .timesheet-tasks {
   min-width: 0;
   padding: 8px 0;
+}
+
+.timesheet-voice-controls {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px 4px 12px;
+}
+
+.timesheet-mic-button {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line-color);
+  border-radius: 8px;
+  padding: 0;
+  color: var(--muted-color);
+  background: var(--chip-bg);
+}
+
+.timesheet-mic-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.timesheet-mic-button.is-listening {
+  border-color: #dc2626;
+  color: #fff;
+  background: #dc2626;
+  animation: timesheet-mic-pulse 1.8s ease-in-out infinite;
+}
+
+.timesheet-voice-preview {
+  overflow: hidden;
+  color: var(--muted-color);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes timesheet-mic-pulse {
+  50% {
+    box-shadow: 0 0 0 5px rgb(220 38 38 / 16%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timesheet-mic-button.is-listening {
+    animation: none;
+  }
 }
 
 .timesheet-task {

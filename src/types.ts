@@ -10,4 +10,5 @@ export interface UserSettings {
   autoHours: number
   timeZone: string
   aiWordingEnabled: boolean
+  voiceLanguage: string
 }

@@ -38,6 +38,7 @@ users/{uid}/days/{yyyy-MM-dd}   (document id = the date key)
 users/{uid}/settings/main
   autoHours:     number          // default 8
   timeZone:      string          // default "America/Chicago" (used to decide today's date)
+  voiceLanguage: string          // default navigator.language
 ```
 
 - Do not create a document for a day that has no tasks and no override. Delete it if it becomes empty.
@@ -87,6 +88,11 @@ Nov 3 (Tue) - 9 h
 
 Total: 180 h
 ```
+
+**Voice entry (Day view only):**
+- Use the browser's built-in `SpeechRecognition` or `webkitSpeechRecognition`; do not add a speech service or library.
+- A voice-language setting is saved in `users/{uid}/settings/main`; interim speech is preview-only and each cleaned final phrase becomes a task through the normal task update/save path.
+- Listening is toggleable with the mic or Alt+M, stops with Escape or after 15 seconds of silence, and requires a supported browser and an internet connection.
 
 ## 5. Folder structure
 

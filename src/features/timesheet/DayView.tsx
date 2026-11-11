@@ -7,6 +7,7 @@ interface DayViewProps {
   todayKey: string
   autoHours: number
   aiWordingEnabled: boolean
+  voiceLanguage: string
   isOnline: boolean
   onDaysChange: (days: DaysByKey) => void
 }
@@ -17,6 +18,7 @@ function DayView({
   todayKey,
   autoHours,
   aiWordingEnabled,
+  voiceLanguage,
   isOnline,
   onDaysChange,
 }: DayViewProps) {
@@ -25,6 +27,7 @@ function DayView({
       <DayContent
         autoHours={autoHours}
         aiWordingEnabled={aiWordingEnabled}
+        voiceLanguage={voiceLanguage}
         dayKey={dayKey}
         isOnline={isOnline}
         key={dayKey}

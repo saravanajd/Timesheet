@@ -9,6 +9,7 @@ import RangeNav from './RangeNav'
 import SummaryBar from './SummaryBar'
 import WeekView from './WeekView'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
+import { isSpeechRecognitionSupported } from '../../lib/speech'
 
 interface TimesheetPageProps {
   uid: string
@@ -31,6 +32,7 @@ function TimesheetPage({ uid }: TimesheetPageProps) {
     error,
     saveAutoHours,
     saveAiWordingEnabled,
+    saveVoiceLanguage,
   } = useSettings(uid)
   const isOnline = useOnlineStatus()
   const onDaysChange = useCallback((nextDays: DaysByKey) => {
@@ -85,7 +87,10 @@ function TimesheetPage({ uid }: TimesheetPageProps) {
         days={days}
         onAutoHoursChange={saveAutoHours}
         aiWordingEnabled={settings.aiWordingEnabled}
+        voiceLanguage={settings.voiceLanguage}
+        voiceSupported={isSpeechRecognitionSupported()}
         onAiWordingChange={saveAiWordingEnabled}
+        onVoiceLanguageChange={saveVoiceLanguage}
         status={status}
       />
 
@@ -99,6 +104,7 @@ function TimesheetPage({ uid }: TimesheetPageProps) {
         <DayView
           autoHours={settings.autoHours}
           aiWordingEnabled={settings.aiWordingEnabled}
+          voiceLanguage={settings.voiceLanguage}
           dayKey={dayKey}
           isOnline={isOnline}
           onDaysChange={onDaysChange}
