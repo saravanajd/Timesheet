@@ -10,7 +10,7 @@ Reference prototype: `docs/prototype.html` (the approved design and behaviour; c
 - One user (me). Each month I send a list of tasks per day plus the **total hours for that day**. There are no per-task hours and no project, start or end fields.
 - Default screen is **Day view**: only the current day, cursor already in the task list.
 - **Week** and **Month** views are for review and copying. Saturday and Sunday are highlighted (usually a day off).
-- Hours are **automatic**: a day with at least one non-empty task gets the default daily hours (setting, default 9). A day with no tasks has 0. I can click the hours number to override it; clearing it goes back to auto.
+- Hours are **automatic**: a day with at least one non-empty task gets the default daily hours (setting, default 8). A day with no tasks has 0. I can click the hours number to override it; clearing it goes back to auto.
 - I work about 4:30 PM to 1:30 AM in my own local time (India), which is roughly 5:00 AM to 2:00 PM US Central (6:00 AM to 3:00 PM during daylight saving). Because the whole shift falls on one US Central calendar date, **the timesheet date is simply today's calendar date in `America/Chicago`**. There is no custom rollover hour. Entering tasks at 5 PM my time and at 1 AM my time the next day both land on the same sheet, and the date changes at US Central midnight, which is about 11:30 AM my time, well before the next shift.
 - Never use the device's local date to decide the timesheet date. Always convert with the `America/Chicago` time zone (date-fns-tz), so daylight saving changes are handled automatically.
 - Note: the prototype's "today" logic uses a 4 PM rollover on the device clock. Ignore that part; follow this plan for date logic.
@@ -36,7 +36,7 @@ users/{uid}/days/{yyyy-MM-dd}   (document id = the date key)
   updatedAt:     serverTimestamp
 
 users/{uid}/settings/main
-  autoHours:     number          // default 9
+  autoHours:     number          // default 8
   timeZone:      string          // default "America/Chicago" (used to decide today's date)
 ```
 

@@ -7,7 +7,7 @@ import type { UserSettings } from '../types'
 export type SettingsStatus = 'loading' | 'saving' | 'saved' | 'error'
 
 const DEFAULT_SETTINGS: UserSettings = {
-  autoHours: 9,
+  autoHours: 8,
   timeZone: 'America/Chicago',
   aiWordingEnabled: false,
 }
