@@ -711,9 +711,9 @@ body {
 
 .todo-item textarea {
   display: block;
+  width: 100%;
   min-width: 0;
   min-height: 30px;
-  flex: 1;
   resize: none;
   overflow: hidden;
   border: 0;
@@ -725,6 +725,18 @@ body {
   font-size: 14px;
 }
 
+.todo-pending-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.todo-pending-text small {
+  display: block;
+  padding: 0 6px 3px;
+  color: var(--muted-color);
+  font-size: 11px;
+}
+
 .todo-item textarea:focus {
   outline: 0;
   background: var(--accent-bg);
@@ -734,9 +746,9 @@ body {
   display: flex;
   min-width: 0;
   flex: 1;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   padding: 4px 6px;
   color: var(--muted-color);
   font-size: 14px;
@@ -748,7 +760,7 @@ body {
 }
 
 .todo-completed-text small {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   font-size: 11px;
 }
 

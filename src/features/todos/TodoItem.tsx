@@ -86,20 +86,29 @@ function TodoItem({
       {completed ? (
         <div className="todo-completed-text">
           <span>{todo.text}</span>
-          {todo.doneAt && (
-            <small>Done {format(todo.doneAt.toDate(), 'MMM d')}</small>
-          )}
+          <small>
+            {todo.createdAt && (
+              <>Created {format(todo.createdAt.toDate(), 'MMM d')}</>
+            )}
+            {todo.createdAt && todo.doneAt && ' · '}
+            {todo.doneAt && <>Done {format(todo.doneAt.toDate(), 'MMM d')}</>}
+          </small>
         </div>
       ) : (
-        <textarea
-          aria-label="To-do text"
-          onBlur={commitText}
-          onChange={(event) => changeText(event.currentTarget.value)}
-          onKeyDown={handleKeyDown}
-          ref={textareaRef}
-          rows={1}
-          value={text}
-        />
+        <div className="todo-pending-text">
+          <textarea
+            aria-label="To-do text"
+            onBlur={commitText}
+            onChange={(event) => changeText(event.currentTarget.value)}
+            onKeyDown={handleKeyDown}
+            ref={textareaRef}
+            rows={1}
+            value={text}
+          />
+          {todo.createdAt && (
+            <small>Created {format(todo.createdAt.toDate(), 'MMM d')}</small>
+          )}
+        </div>
       )}
       <button
         aria-label="Delete to-do"
