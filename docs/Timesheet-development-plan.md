@@ -98,6 +98,11 @@ Total: 180 h
 - A voice-language setting is saved in `users/{uid}/settings/main`; interim speech is preview-only and each cleaned final phrase becomes a task through the normal task update/save path.
 - Listening is toggleable with the mic or Alt+M, stops with Escape or after 15 seconds of silence, and requires a supported browser and an internet connection.
 
+**To-do list (Day view only):**
+- Store to-dos in `users/{uid}/todos`, separate from timesheet day entries; to-dos never affect hours.
+- Listen to incomplete items and the last 30 days of completed items separately; sort client-side by creation/completion timestamps.
+- Allow pending items to be edited, completed/restored, or deleted. Keep the selected To do/Completed tab only in memory while the app is open.
+
 ## 5. Folder structure
 
 ```

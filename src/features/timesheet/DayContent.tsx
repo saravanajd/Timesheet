@@ -4,6 +4,7 @@ import { useSpeechTasks } from '../../hooks/useSpeechTasks'
 import { insertTranscriptTask } from '../../lib/speech'
 import DayRow from './DayRow'
 import type { DaysByKey } from '../../types'
+import TodoPanel from '../todos/TodoPanel'
 
 interface DayContentProps {
   uid: string
@@ -151,6 +152,7 @@ function DayContent({
         {status === 'offline' ? 'Saved offline · will sync' : ''}
         {status === 'error' ? 'Save failed' : ''}
       </div>
+      <TodoPanel key={`todos:${uid}`} uid={uid} />
     </>
   )
 }
