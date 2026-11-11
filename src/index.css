@@ -600,7 +600,7 @@ body {
   position: fixed;
   z-index: 1100;
   right: max(16px, env(safe-area-inset-right, 0px));
-  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  top: max(16px, env(safe-area-inset-top, 0px));
   display: flex;
   max-width: min(440px, calc(100vw - 32px));
   align-items: center;
