@@ -2,12 +2,15 @@ import type { MutableRefObject, ReactNode, Ref } from 'react'
 import { displayHours } from '../../lib/hours'
 import { formatDayLabel, isWeekend } from '../../lib/workday'
 import type { DayEntry } from '../../types'
+import { useContinueTask } from '../../hooks/useContinueTask'
 import HoursInput from './HoursInput'
 import TaskList from './TaskList'
 
 interface DayRowProps {
+  uid: string
   dayKey: string
   day: DayEntry
+  destinationTasks?: readonly string[]
   autoHours: number
   isToday: boolean
   keepTrailingEmpty?: boolean
@@ -24,8 +27,10 @@ interface DayRowProps {
 }
 
 function DayRow({
+  uid,
   dayKey,
   day,
+  destinationTasks,
   autoHours,
   isToday,
   keepTrailingEmpty = false,
@@ -40,6 +45,7 @@ function DayRow({
   onDayChange,
   onBlur,
 }: DayRowProps) {
+  const continueTask = useContinueTask(uid, dayKey, destinationTasks)
   const weekend = isWeekend(dayKey)
   const [weekday, monthAndDate] = formatDayLabel(dayKey).split(', ')
   const taskLines = day.tasks.length > 0 ? day.tasks : ['']
@@ -64,6 +70,7 @@ function DayRow({
         navigationOffset={navigationOffset}
         navigationRefs={navigationRefs}
         footer={taskListFooter}
+        onContinueTask={continueTask}
         onBlur={onBlur}
         onTasksChange={(tasks) => onDayChange({ ...day, tasks })}
         placeholder={weekend ? 'Weekend · day off' : 'Add task…'}

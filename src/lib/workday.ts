@@ -100,6 +100,40 @@ export function addDaysToKey(key: string, amount: number): string {
   return toDateKey(addDays(parseDateKey(key), amount))
 }
 
+export function nextDayKey(key: string): string {
+  const [yearText, monthText, dayText] = key.split('-')
+  let year = Number(yearText)
+  let month = Number(monthText)
+  let day = Number(dayText) + 1
+  const leapYear =
+    year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+  const daysInMonth = [
+    31,
+    leapYear ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ]
+
+  if (day > daysInMonth[month - 1]) {
+    day = 1
+    month += 1
+    if (month > 12) {
+      month = 1
+      year += 1
+    }
+  }
+
+  return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
 export function addMonthsToKey(key: string, amount: number): string {
   return toDateKey(startOfMonth(addMonths(parseDateKey(key), amount)))
 }

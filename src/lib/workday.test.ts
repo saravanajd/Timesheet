@@ -11,6 +11,7 @@ import {
   isWeekend,
   listRangeKeys,
   monthRange,
+  nextDayKey,
   weekRange,
 } from './workday'
 
@@ -72,6 +73,12 @@ describe('date ranges and labels', () => {
     expect(addDaysToKey('2026-11-30', 1)).toBe('2026-12-01')
     expect(addMonthsToKey('2027-01-15', -1)).toBe('2026-12-01')
     expect(addMonthsToKey('2026-12-31', 1)).toBe('2027-01-01')
+  })
+
+  it('calculates the next date key across month, year, and leap-day boundaries', () => {
+    expect(nextDayKey('2026-11-30')).toBe('2026-12-01')
+    expect(nextDayKey('2026-12-31')).toBe('2027-01-01')
+    expect(nextDayKey('2028-02-28')).toBe('2028-02-29')
   })
 
   it('formats day, week, and month header labels', () => {

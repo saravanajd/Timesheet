@@ -315,7 +315,7 @@ body {
 
 .timesheet-range-card .timesheet-task textarea {
   min-height: 34px;
-  padding: 7px 78px 7px 10px;
+  padding: 7px 104px 7px 10px;
   font-size: 15px;
 }
 
@@ -422,7 +422,7 @@ body {
   resize: none;
   border: 0;
   border-radius: 6px;
-  padding: 10px 78px 10px 12px;
+  padding: 10px 104px 10px 12px;
   color: var(--text-color);
   background: transparent;
   font: inherit;
@@ -443,6 +443,7 @@ body {
   top: 3px;
   right: 6px;
   display: flex;
+  align-items: center;
   gap: 2px;
   opacity: 0;
 }
@@ -460,6 +461,32 @@ body {
   color: var(--muted-color) !important;
   background: transparent !important;
   opacity: 1;
+}
+
+.timesheet-task-action-spacer,
+.timesheet-continue-task {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  align-items: center;
+  justify-content: center;
+}
+
+.timesheet-task-action-spacer {
+  visibility: hidden;
+}
+
+.timesheet-task-actions .timesheet-continue-task {
+  border: 0 !important;
+  color: var(--muted-color) !important;
+  background: transparent !important;
+  font-size: 18px;
+}
+
+.timesheet-task-actions .timesheet-continue-task:hover {
+  color: var(--accent-color) !important;
+  background: var(--chip-bg) !important;
 }
 
 .timesheet-task-actions .timesheet-delete-task {
@@ -585,6 +612,19 @@ body {
   background: var(--card-bg);
   box-shadow: 0 4px 18px rgb(0 0 0 / 16%);
   font-size: 13px;
+}
+
+.timesheet-toast.is-notice {
+  border-color: var(--line-color);
+  color: var(--text-color);
+}
+
+.timesheet-toast-action {
+  border: 0;
+  padding: 2px 6px;
+  color: var(--accent-color);
+  background: transparent;
+  font-weight: 600;
 }
 
 .timesheet-toast-dismiss {
@@ -803,12 +843,19 @@ body {
     padding: 0 !important;
   }
 
+  .timesheet-task-action-spacer,
+  .timesheet-continue-task {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
   .timesheet-task textarea {
-    padding-right: 84px;
+    padding-right: 126px;
   }
 
   .timesheet-range-card .timesheet-task textarea {
-    padding-right: 84px;
+    padding-right: 126px;
     font-size: 16px;
   }
 

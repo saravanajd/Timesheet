@@ -70,6 +70,7 @@ function DayContent({
       )}
       <div className="timesheet-card">
         <DayRow
+          uid={uid}
           autoFocusLastLine={status !== 'loading'}
           autoHours={autoHours}
           aiWordingEnabled={aiWordingEnabled}

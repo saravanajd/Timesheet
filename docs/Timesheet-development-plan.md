@@ -67,6 +67,10 @@ service cloud.firestore {
 - Day view always shows one trailing empty line and focuses it on load.
 - Save automatically (debounce about 600 ms and on blur). Show a small "Saved" or "Saving…" indicator.
 
+**Continue to next day:**
+- Each non-empty task can be copied to the following calendar date from Day, Week, or Month view using its arrow button or Ctrl+Shift+Enter.
+- Add the trimmed text with Firestore `arrayUnion` so the write is offline-capable and does not replace other tasks. An Undo action removes it with `arrayRemove`.
+
 **Hours:**
 - `displayHours = hoursOverride ?? (hasNonEmptyTask ? autoHours : 0)`.
 - Click the number to edit. Accept decimals with `.` or `,`. Empty or invalid input sets the override back to `null`. Override numbers use the accent colour.

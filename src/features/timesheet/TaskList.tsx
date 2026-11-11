@@ -11,6 +11,7 @@ import {
   improveWording,
 } from '../../lib/aiWording'
 import { ensureTrailingEmptyTask } from '../../lib/dayData'
+import ContinueButton from './ContinueButton'
 
 interface TaskListProps {
   tasks: string[]
@@ -24,6 +25,7 @@ interface TaskListProps {
   navigationRefs?: MutableRefObject<Array<HTMLTextAreaElement | null>>
   navigationOffset?: number
   footer?: ReactNode
+  onContinueTask: (task: string) => void
 }
 
 interface TaskLineProps {
@@ -36,6 +38,7 @@ interface TaskLineProps {
   focusTask: () => void
   onChange: (value: string) => void
   onDelete: () => void
+  onContinueTask: (task: string) => void
   onBlur: () => void
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void
 }
@@ -50,6 +53,7 @@ function TaskLine({
   focusTask,
   onChange,
   onDelete,
+  onContinueTask,
   onBlur,
   onKeyDown,
 }: TaskLineProps) {
@@ -106,6 +110,17 @@ function TaskLine({
   }
 
   function handleTaskKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (
+      event.ctrlKey &&
+      event.shiftKey &&
+      event.key === 'Enter' &&
+      task.trim()
+    ) {
+      event.preventDefault()
+      onContinueTask(task)
+      return
+    }
+
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'i') {
       event.preventDefault()
       void requestImprovement()
@@ -146,19 +161,24 @@ function TaskLine({
         rows={1}
         value={task}
       />
-      {aiWordingEnabled && isOnline && task.trim() && (
+      {task.trim() && (
         <div className="timesheet-task-actions">
-          <button
-            aria-label={`Improve wording for task ${index + 1}`}
-            aria-busy={isRunning}
-            className="timesheet-improve-task"
-            disabled={isRunning}
-            onClick={() => void requestImprovement()}
-            title={isRunning ? 'Improving wording…' : 'Improve wording (Ctrl+I)'}
-            type="button"
-          >
-            {isRunning ? '…' : '✨'}
-          </button>
+          {aiWordingEnabled && isOnline ? (
+            <button
+              aria-label={`Improve wording for task ${index + 1}`}
+              aria-busy={isRunning}
+              className="timesheet-improve-task"
+              disabled={isRunning}
+              onClick={() => void requestImprovement()}
+              title={isRunning ? 'Improving wording…' : 'Improve wording (Ctrl+I)'}
+              type="button"
+            >
+              {isRunning ? '…' : '✨'}
+            </button>
+          ) : (
+            <span aria-hidden="true" className="timesheet-task-action-spacer" />
+          )}
+          <ContinueButton onContinue={onContinueTask} task={task} />
           <button
             aria-label={`Delete task ${index + 1}`}
             className="timesheet-delete-task"
@@ -169,17 +189,6 @@ function TaskLine({
             ✕
           </button>
         </div>
-      )}
-      {(!aiWordingEnabled || !isOnline || !task.trim()) && task.trim() && (
-        <button
-          aria-label={`Delete task ${index + 1}`}
-          className="timesheet-delete-task"
-          onClick={onDelete}
-          title="Delete task (Ctrl+Delete)"
-          type="button"
-        >
-          ✕
-        </button>
       )}
       {visibleSuggestion && (
         <div
@@ -228,6 +237,7 @@ function TaskList({
   navigationRefs,
   navigationOffset = 0,
   footer,
+  onContinueTask,
 }: TaskListProps) {
   const textareaRefs = useRef<Array<HTMLTextAreaElement | null>>([])
   const pendingFocusRef = useRef<{ index: number; atEnd: boolean } | null>(null)
@@ -361,6 +371,7 @@ function TaskList({
             updateTasks(nextTasks)
           }}
           onDelete={() => deleteTask(index)}
+          onContinueTask={onContinueTask}
           onKeyDown={(event) => handleKeyDown(event, index)}
           focusTask={() => textareaRefs.current[index]?.focus()}
           placeholder={placeholder}

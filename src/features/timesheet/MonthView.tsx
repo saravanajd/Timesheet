@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { DaysByKey } from '../../types'
-import { listRangeKeys, monthRange } from '../../lib/workday'
+import { listRangeKeys, monthRange, nextDayKey } from '../../lib/workday'
 import { useDaysRange } from '../../hooks/useDaysRange'
 import DayRow from './DayRow'
 
@@ -60,10 +60,16 @@ function MonthView({
       <div className="timesheet-card timesheet-range-card">
         {keys.map((key) => (
           <DayRow
+            uid={uid}
             autoHours={autoHours}
             aiWordingEnabled={aiWordingEnabled}
             day={days[key] ?? { tasks: [], hoursOverride: null }}
             dayKey={key}
+            destinationTasks={
+              status !== 'loading' && keys.includes(nextDayKey(key))
+                ? (days[nextDayKey(key)]?.tasks ?? [])
+                : undefined
+            }
             isOnline={isOnline}
             isToday={key === todayKey}
             key={key}
